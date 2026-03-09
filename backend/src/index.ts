@@ -79,7 +79,7 @@ app.use('/api', routes);
 
 // Health Check
 app.get('/', (req, res) => {
-  res.send('Padel App API is running');
+  res.send('ReservApp API is running');
 });
 
 // Error handling

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getReservations, createReservation, updateReservation, cancelReservation, exportReservationsCSV } from '../controllers/reservation.controller';
+import { getReservations, createReservation, updateReservation, cancelReservation, exportReservationsCSV, exportReservationIcs } from '../controllers/reservation.controller';
 import { authenticateToken, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/export', authorizeRole(['ADMIN']), exportReservationsCSV);
+router.get('/:id/ics', exportReservationIcs);
 router.get('/', getReservations);
 router.post('/', createReservation);
 router.put('/:id', updateReservation);

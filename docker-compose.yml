@@ -3,31 +3,30 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: padel_postgres
+    container_name: reservapp_postgres
     environment:
-      POSTGRES_USER: padel_user
-      POSTGRES_PASSWORD: padel_password
-      POSTGRES_DB: padel_db
+      POSTGRES_USER: reservapp_user
+      POSTGRES_PASSWORD: reservapp_password
+      POSTGRES_DB: reservapp_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U padel_user -d padel_db"]
+      test: [ "CMD-SHELL", "pg_isready -U reservapp_user -d reservapp_db" ]
       interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
     build: ./backend
-    container_name: padel_backend
+    container_name: reservapp_backend
     ports:
       - "3000:3000"
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: "postgresql://padel_user:padel_password@postgres:5432/padel_db?schema=public"
-      PORT: 3000
-      JWT_SECRET: "supersecretkey_change_in_production"
-      NODE_ENV: "production"
+      - DATABASE_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
     depends_on:
       postgres:
         condition: service_healthy
@@ -35,7 +34,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: padel_frontend
+    container_name: reservapp_frontend
     ports:
       - "80:80"
     depends_on:

@@ -20,10 +20,12 @@ const loginSchema = zod_1.z.object({
 });
 const register = async (req, res) => {
     try {
+        console.log('Registering user:', req.body.email);
         const { email, password, name, role } = registerSchema.parse(req.body);
         const existingUser = await prisma_1.default.user.findUnique({ where: { email } });
         if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+            console.log('User already exists:', email);
+            return res.status(400).json({ error: 'El usuario ya existe' });
         }
         const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         const user = await prisma_1.default.user.create({
@@ -34,36 +36,47 @@ const register = async (req, res) => {
                 role: role || 'MEMBER',
             },
         });
+        console.log('User registered successfully:', user.id);
         const token = jsonwebtoken_1.default.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.status(201).json({ user: { id: user.id, email: user.email, name: user.name, role: user.role }, token });
     }
     catch (error) {
+        console.error('Register error:', error);
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.register = register;
 const login = async (req, res) => {
     try {
+        console.log('Login attempt:', req.body.email);
         const { email, password } = loginSchema.parse(req.body);
         const user = await prisma_1.default.user.findUnique({ where: { email } });
         if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            console.log('User not found:', email);
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+        if (user.isBlocked) {
+            console.log('User blocked:', email);
+            return res.status(403).json({ error: 'Su cuenta ha sido bloqueada. Por favor contacte a administración.' });
         }
         const isMatch = await bcryptjs_1.default.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            console.log('Password mismatch:', email);
+            return res.status(401).json({ error: 'Credenciales inválidas' });
         }
+        console.log('Login successful:', user.id);
         const token = jsonwebtoken_1.default.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role }, token });
     }
     catch (error) {
+        console.error('Login error:', error);
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.login = login;

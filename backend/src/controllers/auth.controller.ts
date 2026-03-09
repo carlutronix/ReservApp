@@ -95,3 +95,109 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+const crypto = require('crypto');
+import { sendEmail } from '../utils/sendEmail';
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Return a generic response to prevent email scanning
+      return res.json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
+    }
+
+    // Generate secure token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const resetPasswordToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken,
+        resetPasswordExpires,
+      },
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${rawToken}`;
+
+    const message = `Has solicitado restablecer tu contraseña. \n\nPor favor, ingresa al siguiente enlace para poder cambiarla: \n\n ${resetUrl} \n\n Si no lo has solicitado, ignora este mensaje. El enlace es válido por 1 hora.`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Recuperación de contraseña en ReservApp',
+        message,
+      });
+
+      res.json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
+    } catch (error) {
+      console.error('Email could not be sent', error);
+      // Revert token if email fails
+      await prisma.user.update({
+        where: { email },
+        data: {
+          resetPasswordToken: null,
+          resetPasswordExpires: null,
+        },
+      });
+      return res.status(500).json({ error: 'El correo no pudo ser enviado' });
+    }
+
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: (error as any).errors });
+    }
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+const resetPasswordSchema = z.object({
+  token: z.string(),
+  newPassword: z.string().min(6),
+});
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = resetPasswordSchema.parse(req.body);
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'El token es inválido o ha expirado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: (error as any).errors });
+    }
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+

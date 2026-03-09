@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, isFuture } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar, Clock, Euro, XCircle, Edit } from 'lucide-react';
+import { Calendar, Clock, Euro, XCircle, Edit, CalendarPlus } from 'lucide-react';
 import api from '../api/client';
 import EditReservationModal from './EditReservationModal';
 
@@ -54,8 +54,26 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
 
       if (onReservationCancelled) onReservationCancelled();
 
+      if (onReservationCancelled) onReservationCancelled();
+
     } catch (error) {
       console.error('Error cancelling reservation', error);
+    }
+  };
+
+  const handleDownloadIcs = async (id: string) => {
+    try {
+      const response = await api.get(`/reservations/${id}/ics`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reserva-${id}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading ICS file', error);
+      alert('Error al descargar el calendario');
     }
   };
 
@@ -146,6 +164,12 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
                       className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
                     >
                       <Edit size={16} className="mr-1" /> Editar
+                    </button>
+                    <button
+                      onClick={() => handleDownloadIcs(res.id)}
+                      className="flex items-center text-gray-600 hover:text-gray-800 border border-gray-300 px-2 py-1 rounded text-sm font-medium transition-colors bg-white hover:bg-gray-50"
+                    >
+                      <CalendarPlus size={16} className="mr-1" /> Añadir al calendario
                     </button>
                     <button
                       onClick={() => handleCancel(res.id)}

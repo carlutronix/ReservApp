@@ -50,7 +50,12 @@ export default function Login() {
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+            <div className="flex justify-between items-center text-sm font-medium text-gray-700">
+              <label>Contraseña</label>
+              <Link to="/forgot-password" className="text-indigo-600 hover:text-indigo-500 text-xs">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
             <input
               type="password"
               {...register('password')}

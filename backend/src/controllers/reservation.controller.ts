@@ -338,3 +338,55 @@ export const exportReservationsCSV = async (req: AuthRequest, res: Response) => 
     res.status(500).json({ error: 'Error interno al exportar CSV' });
   }
 };
+
+export const exportReservationIcs = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const role = req.user.role;
+
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: String(id) },
+      include: { court: true }
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reserva no encontrada' });
+    }
+
+    if (role !== 'ADMIN' && role !== 'STAFF' && reservation.userId !== userId) {
+      return res.status(403).json({ error: 'No autorizado para descargar esta reserva' });
+    }
+
+    const { createEvent } = require('ics');
+
+    const start = new Date(reservation.startTime);
+    const end = new Date(reservation.endTime);
+
+    const event = {
+      start: [start.getFullYear(), start.getMonth() + 1, start.getDate(), start.getHours(), start.getMinutes()],
+      end: [end.getFullYear(), end.getMonth() + 1, end.getDate(), end.getHours(), end.getMinutes()],
+      startInputType: 'local',
+      title: `Reserva pista - ${reservation.court.name}`,
+      description: 'Reserva creada en ReservApp',
+      location: reservation.court.name,
+      status: 'CONFIRMED',
+      busyStatus: 'BUSY',
+    };
+
+    createEvent(event as any, (error: Error | undefined, value: string) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Error al generar el calendario' });
+      }
+
+      res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="reserva-${reservation.id}.ics"`);
+      res.send(value);
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};

@@ -6,20 +6,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCourt = exports.updateCourt = exports.createCourt = exports.getCourts = void 0;
 const prisma_1 = __importDefault(require("../config/prisma"));
 const zod_1 = require("zod");
+// Update schema validation
 const courtSchema = zod_1.z.object({
     name: zod_1.z.string(),
     type: zod_1.z.string(),
     surface: zod_1.z.string(),
     pricePerHour: zod_1.z.number(),
+    sport: zod_1.z.string().default('Padel'), // Add sport validation
     isActive: zod_1.z.boolean().optional(),
 });
 const getCourts = async (req, res) => {
     try {
-        const courts = await prisma_1.default.court.findMany();
+        const { sport } = req.query;
+        const where = sport ? { sport: String(sport) } : {};
+        const courts = await prisma_1.default.court.findMany({
+            where
+        });
         res.json(courts);
     }
     catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.getCourts = getCourts;
@@ -38,7 +44,7 @@ const createCourt = async (req, res) => {
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.createCourt = createCourt;
@@ -53,7 +59,7 @@ const updateCourt = async (req, res) => {
         res.json(court);
     }
     catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.updateCourt = updateCourt;
@@ -64,7 +70,7 @@ const deleteCourt = async (req, res) => {
         res.sendStatus(204);
     }
     catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 };
 exports.deleteCourt = deleteCourt;

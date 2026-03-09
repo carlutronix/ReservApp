@@ -13,7 +13,7 @@ export default function Layout() {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-800 text-white p-6">
-        <h1 className="text-2xl font-bold mb-8">Padel Club</h1>
+        <h1 className="text-2xl font-bold mb-8">ReservApp</h1>
         <nav className="space-y-4">
           <Link to="/dashboard" className="flex items-center space-x-2 p-2 hover:bg-slate-700 rounded">
             <Home size={20} />

@@ -5,7 +5,9 @@ const reservation_controller_1 = require("../controllers/reservation.controller"
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticateToken);
+router.get('/export', (0, auth_middleware_1.authorizeRole)(['ADMIN']), reservation_controller_1.exportReservationsCSV);
 router.get('/', reservation_controller_1.getReservations);
 router.post('/', reservation_controller_1.createReservation);
+router.put('/:id', reservation_controller_1.updateReservation);
 router.put('/:id/cancel', reservation_controller_1.cancelReservation);
 exports.default = router;
