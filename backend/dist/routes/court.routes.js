@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const court_controller_1 = require("../controllers/court.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const router = (0, express_1.Router)();
+router.get('/', court_controller_1.getCourts);
+router.post('/', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRole)(['ADMIN', 'STAFF']), court_controller_1.createCourt);
+router.put('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRole)(['ADMIN', 'STAFF']), court_controller_1.updateCourt);
+router.delete('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRole)(['ADMIN', 'STAFF']), court_controller_1.deleteCourt);
+exports.default = router;

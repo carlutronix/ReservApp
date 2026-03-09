@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: padel_postgres
+    environment:
+      POSTGRES_USER: padel_user
+      POSTGRES_PASSWORD: padel_password
+      POSTGRES_DB: padel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U padel_user -d padel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: padel_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://padel_user:padel_password@postgres:5432/padel_db?schema=public"
+      PORT: 3000
+      JWT_SECRET: "supersecretkey_change_in_production"
+      NODE_ENV: "production"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: padel_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
