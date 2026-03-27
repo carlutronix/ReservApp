@@ -8,8 +8,11 @@ const courtSchema = z.object({
   type: z.string(),
   surface: z.string(),
   pricePerHour: z.number(),
-  sport: z.string().default('Padel'), // Add sport validation
+  sport: z.string().default('Pádel'), // Add sport validation
   isActive: z.boolean().optional(),
+  openTime: z.string().optional(),
+  closeTime: z.string().optional(),
+  activeDays: z.array(z.number()).optional(),
 });
 
 export const getCourts = async (req: Request, res: Response) => {

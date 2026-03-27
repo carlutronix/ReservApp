@@ -25,13 +25,13 @@ const seedData = async () => {
       console.log('Seeding initial courts...');
       await prisma.court.createMany({
         data: [
-          { name: 'Padel Indoor 1', type: 'Indoor', surface: 'Blue Turf', pricePerHour: 20, sport: 'Padel' },
-          { name: 'Padel Indoor 2', type: 'Indoor', surface: 'Blue Turf', pricePerHour: 20, sport: 'Padel' },
-          { name: 'Padel Outdoor 1', type: 'Outdoor', surface: 'Green Turf', pricePerHour: 15, sport: 'Padel' },
-          { name: 'Tennis Court 1', type: 'Outdoor', surface: 'Clay', pricePerHour: 25, sport: 'Tennis' },
-          { name: 'Basketball Court 1', type: 'Indoor', surface: 'Hardwood', pricePerHour: 30, sport: 'Basketball' },
-          { name: 'Football Field 1', type: 'Outdoor', surface: 'Grass', pricePerHour: 50, sport: 'Football' },
-          { name: 'Volleyball Court 1', type: 'Indoor', surface: 'Synthetic', pricePerHour: 20, sport: 'Volleyball' },
+          { name: 'Pádel Interior 1', type: 'Interior', surface: 'Césped Sintético', pricePerHour: 20, sport: 'Pádel' },
+          { name: 'Pádel Interior 2', type: 'Interior', surface: 'Césped Sintético', pricePerHour: 20, sport: 'Pádel' },
+          { name: 'Pádel Exterior 1', type: 'Exterior', surface: 'Césped Sintético', pricePerHour: 15, sport: 'Pádel' },
+          { name: 'Pista de Tenis 1', type: 'Exterior', surface: 'Tierra Batida', pricePerHour: 25, sport: 'Tenis' },
+          { name: 'Cancha de Baloncesto 1', type: 'Interior', surface: 'Parqué', pricePerHour: 30, sport: 'Baloncesto' },
+          { name: 'Campo de Fútbol 1', type: 'Exterior', surface: 'Césped Natural', pricePerHour: 50, sport: 'Fútbol' },
+          { name: 'Cancha de Voleibol 1', type: 'Interior', surface: 'Sintética', pricePerHour: 20, sport: 'Voleibol' },
         ]
       });
       console.log('Courts seeded successfully');

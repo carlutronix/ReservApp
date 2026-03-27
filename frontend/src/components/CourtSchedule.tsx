@@ -11,6 +11,10 @@ interface Court {
   type: string;
   surface: string;
   pricePerHour: number;
+  isActive: boolean;
+  openTime?: string;
+  closeTime?: string;
+  activeDays?: number[];
 }
 
 interface Reservation {
@@ -37,10 +41,22 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ court: Court; time: Date } | null>(null);
 
-  // Time slots: 08:00 to 22:00
-  const timeSlots = Array.from({ length: 15 }, (_, i) => {
+  // Dynamic Time slots calculation based on existing visible courts
+  let START_HOUR = 8;
+  let END_HOUR = 22;
+
+  if (courts.length > 0) {
+    START_HOUR = Math.min(...courts.map(c => parseInt(c.openTime?.split(':')[0] || '8')));
+    END_HOUR = Math.max(...courts.map(c => parseInt(c.closeTime?.split(':')[0] || '22')));
+    if (START_HOUR > END_HOUR) {
+      START_HOUR = 8;
+      END_HOUR = 22;
+    }
+  }
+
+  const timeSlots = Array.from({ length: Math.max(1, END_HOUR - START_HOUR) }, (_, i) => {
     const d = new Date(selectedDate);
-    d.setHours(8 + i, 0, 0, 0);
+    d.setHours(START_HOUR + i, 0, 0, 0);
     return d;
   });
 
@@ -122,20 +138,28 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
     <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full">
       {/* Header */}
       {/* Header with Date Picker */}
-      <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+      <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 gap-4">
         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <CalendarIcon className="text-indigo-600" />
           Horario de Pistas
         </h2>
 
         <div className="flex items-center gap-4 relative">
-          <button onClick={() => changeDate(-1)} className="p-1 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+          <button
+            onClick={() => changeDate(-1)}
+            disabled={isSameDay(selectedDate, new Date()) || selectedDate < new Date()}
+            className={`p-1 rounded transition-colors ${isSameDay(selectedDate, new Date()) || selectedDate < new Date()
+              ? 'text-gray-300 cursor-not-allowed'
+              : 'hover:bg-gray-200 text-gray-600'
+              }`}
+          >
             <ChevronLeft />
           </button>
 
           <div className="relative group cursor-pointer">
             <input
               type="date"
+              min={format(new Date(), 'yyyy-MM-dd')}
               value={format(selectedDate, 'yyyy-MM-dd')}
               onChange={(e) => setSelectedDate(new Date(e.target.value))}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
@@ -186,30 +210,40 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                       {/* Court Name Column */}
                       <div className="p-3 bg-gray-100 rounded-l flex flex-col justify-center">
                         <span className="font-bold text-sm text-gray-800">{court.name}</span>
-                        <span className="text-xs text-gray-500 capitalize">{court.type === 'Indoor' ? 'Interior' : 'Exterior'}</span>
+                        <span className="text-xs text-gray-500 capitalize">{court.type}</span>
                       </div>
 
                       {/* Time Slots */}
                       {timeSlots.map((time, i) => {
                         const reserved = isReserved(court.id, time);
-                        const isPast = isSameDay(selectedDate, new Date()) && time < new Date();
+                        const isPast = time < new Date();
+                        const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                        const dayOfWeek = selectedDate.getDay();
+                        const isActiveDay = court.activeDays?.includes(dayOfWeek) ?? true;
+                        const isWithinHours = timeStr >= (court.openTime || '08:00') && timeStr < (court.closeTime || '22:00');
+                        const isOob = !isActiveDay || !isWithinHours;
 
                         return (
                           <button
                             key={i}
                             onClick={() => handleSlotClick(court, time)}
-                            disabled={reserved || isPast}
+                            disabled={reserved || isPast || !court.isActive || isOob}
                             className={`
                           h-16 rounded transition-all border
-                          ${reserved
-                                ? 'bg-red-100 border-red-200 cursor-not-allowed'
-                                : isPast
-                                  ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50'
-                                  : 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm'
+                          ${!court.isActive
+                                ? 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80'
+                                : isOob
+                                  ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center'
+                                  : reserved
+                                    ? 'bg-red-100 border-red-200 cursor-not-allowed'
+                                    : isPast
+                                      ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50'
+                                      : 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm'
                               }
                         `}
-                            title={reserved ? 'Reservado' : isPast ? 'Pasado' : 'Disponible'}
+                            title={!court.isActive ? 'Pista Bloqueada' : isOob ? 'Pista Cerrada' : reserved ? 'Reservado' : isPast ? 'Pasado' : 'Disponible'}
                           >
+                            {isOob && !(!court.isActive) && <span className="text-[10px] text-gray-400 font-medium">Cerrado</span>}
                           </button>
                         );
                       })}

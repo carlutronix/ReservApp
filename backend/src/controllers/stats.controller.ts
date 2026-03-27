@@ -88,7 +88,7 @@ export const getStats = async (req: Request, res: Response) => {
       courtData[res.courtId].revenue += Number(res.totalPrice || 0);
 
       // Sport
-      const sport = res.court.sport || 'Padel';
+      const sport = res.court.sport || 'Pádel';
       if (!sportData[sport]) sportData[sport] = { name: sport, count: 0 };
       sportData[sport].count++;
 

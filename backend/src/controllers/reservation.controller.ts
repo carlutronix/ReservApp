@@ -48,7 +48,7 @@ export const getReservations = async (req: AuthRequest, res: Response) => {
       where,
       include: {
         user: { select: { name: true, email: true } },
-        court: { select: { name: true } },
+        court: { select: { name: true, sport: true } },
       },
       orderBy: { startTime: 'desc' }
     });
@@ -68,6 +68,10 @@ export const createReservation = async (req: AuthRequest, res: Response) => {
 
     if (start >= end) {
       return res.status(400).json({ error: 'La hora de inicio debe ser anterior a la hora de fin' });
+    }
+
+    if (start < new Date()) {
+      return res.status(400).json({ error: 'No se pueden crear reservas en el pasado' });
     }
 
     // Transaction to ensure no double booking
@@ -110,6 +114,21 @@ export const createReservation = async (req: AuthRequest, res: Response) => {
       // Calculate price
       const court = await tx.court.findUnique({ where: { id: courtId } });
       if (!court) throw new Error('Pista no encontrada');
+      if (!court.isActive) throw new Error('La pista se encuentra bloqueada actualmente');
+
+      // Validar si la pista abre este día de la semana
+      const dayOfWeek = start.getDay();
+      if (court.activeDays && !court.activeDays.includes(dayOfWeek)) {
+        throw new Error('La pista no está disponible este día de la semana');
+      }
+
+      // Validar franja horaria de la pista
+      const startHourStr = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`;
+      const endHourStr = `${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
+
+      if (court.openTime && court.closeTime && (startHourStr < court.openTime || endHourStr > court.closeTime)) {
+        throw new Error(`El horario de esta pista es de ${court.openTime} a ${court.closeTime}`);
+      }
 
       const durationHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
       const totalPrice = Number(court.pricePerHour) * durationHours;
@@ -180,7 +199,7 @@ export const updateReservation = async (req: AuthRequest, res: Response) => {
     }
 
     if (start < new Date()) {
-      return res.status(400).json({ error: 'No se pueden crear ni modificar reservas en el pasado' });
+      return res.status(400).json({ error: 'No se pueden confirmar reservas para un horario pasado' });
     }
 
     const reservation = await prisma.reservation.findUnique({ where: { id: String(id) }, include: { court: true } });
@@ -199,6 +218,11 @@ export const updateReservation = async (req: AuthRequest, res: Response) => {
 
     if (role !== 'ADMIN' && role !== 'STAFF' && reservation.userId !== userId) {
       return res.status(403).json({ error: 'No autorizado para editar esta reserva' });
+    }
+
+    const courtData = await prisma.court.findUnique({ where: { id: reservation.courtId } });
+    if (courtData && !courtData.isActive && role !== 'ADMIN') {
+      return res.status(403).json({ error: 'La pista se encuentra bloqueada actualmente' });
     }
 
     const courtId = reservation.courtId;
@@ -326,7 +350,17 @@ export const exportReservationsCSV = async (req: AuthRequest, res: Response) => 
       ].join(',');
     });
 
-    const csvContent = [headers.join(','), ...rows].join('\n');
+    const totalReservations = reservations.length;
+    const totalRevenue = reservations.reduce((sum, r) => sum + Number(r.totalPrice), 0);
+
+    const summaryRows = [
+      `"--- REPORTE DE RESERVAS ---"`,
+      `"Total Reservas:",${totalReservations}`,
+      `"Ingresos Totales:",${totalRevenue.toFixed(2)}`,
+      ` `
+    ];
+
+    const csvContent = [...summaryRows, headers.join(','), ...rows].join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="reservaciones.csv"');

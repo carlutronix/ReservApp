@@ -18,9 +18,10 @@ interface Reservation {
 interface MyReservationsListProps {
   refreshTrigger?: number;
   onReservationCancelled?: () => void;
+  isDashboardMode?: boolean;
 }
 
-export default function MyReservationsList({ refreshTrigger = 0, onReservationCancelled }: MyReservationsListProps) {
+export default function MyReservationsList({ refreshTrigger = 0, onReservationCancelled, isDashboardMode = false }: MyReservationsListProps) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
@@ -157,7 +158,7 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
                   {Number(res.totalPrice).toFixed(2)}
                 </div>
 
-                {activeTab === 'upcoming' && res.status !== 'CANCELLED' && (
+                {activeTab === 'upcoming' && res.status !== 'CANCELLED' && !isDashboardMode && (
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleEditClick(res)}

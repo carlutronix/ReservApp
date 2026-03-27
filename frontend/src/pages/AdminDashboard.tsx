@@ -7,6 +7,8 @@ import api from '../api/client';
 import EditReservationModal from '../components/EditReservationModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Types
 interface Stats {
@@ -55,16 +57,22 @@ interface Court {
   surface: string;
   pricePerHour: number;
   isActive: boolean;
+  openTime?: string;
+  closeTime?: string;
+  activeDays?: number[];
 }
 
 // Schema for New Court
 const courtSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  type: z.enum(['Indoor', 'Outdoor']),
-  sport: z.enum(['Padel', 'Tennis', 'Basketball', 'Football', 'Volleyball']),
+  type: z.enum(['Interior', 'Exterior']),
+  sport: z.enum(['Pádel', 'Tenis', 'Baloncesto', 'Fútbol', 'Voleibol', 'Bádminton', 'Frontón', 'Squash', 'Tenis de Mesa', 'Hockey']),
   surface: z.string().min(2, 'La superficie es requerida'),
   pricePerHour: z.number().min(1, 'El precio debe ser mayor a 0'),
   isActive: z.boolean().optional(),
+  openTime: z.string().optional().default("08:00"),
+  closeTime: z.string().optional().default("22:00"),
+  activeDays: z.array(z.coerce.number()).optional().default([1, 2, 3, 4, 5, 6, 0])
 });
 
 type CourtFormData = z.infer<typeof courtSchema>;
@@ -79,7 +87,10 @@ const maintenanceSchema = z.object({
 type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'stats' | 'courts' | 'users'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'courts' | 'users' | 'reservations'>('stats');
+  const [allReservations, setAllReservations] = useState<any[]>([]);
+  const [resFilterSport, setResFilterSport] = useState<string>('');
+  const [resFilterDate, setResFilterDate] = useState<string>('');
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [courts, setCourts] = useState<Court[]>([]);
@@ -109,7 +120,7 @@ export default function AdminDashboard() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'reservaciones.csv');
+      link.setAttribute('download', 'Reservas.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -117,6 +128,34 @@ export default function AdminDashboard() {
       console.error('Error al exportar CSV', error);
       alert('Error al descargar el archivo CSV');
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!stats) return;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Reporte de Reservas - ReservApp', 14, 22);
+
+    doc.setFontSize(11);
+    doc.text(`Total Ingresos: €${stats.totalRevenue.toFixed(2)}`, 14, 32);
+    doc.text(`Total Reservas: ${stats.totalReservations}`, 14, 38);
+
+    const tableData = stats.recentReservations.map((r: any) => [
+      format(new Date(r.startTime), 'dd/MM/yyyy'),
+      `${format(new Date(r.startTime), 'HH:mm')} - ${format(new Date(r.endTime), 'HH:mm')}`,
+      r.court.name,
+      r.user.name,
+      `€${Number(r.totalPrice).toFixed(2)}`,
+      r.status === 'CONFIRMED' ? 'Confirmada' : r.status === 'CANCELLED' ? 'Cancelada' : r.status
+    ]);
+
+    autoTable(doc, {
+      startY: 45,
+      head: [['Fecha', 'Hora', 'Pista', 'Usuario', 'Precio', 'Estado']],
+      body: tableData,
+    });
+
+    doc.save('Reservas.pdf');
   };
 
   const fetchUserReservations = async (userId: string) => {
@@ -132,6 +171,11 @@ export default function AdminDashboard() {
     if (!confirm("¿Cancelar esta reserva?")) return;
     try {
       await api.put(`/reservations/${id}/cancel`);
+
+      // Update All Reservations State
+      setAllReservations(prev => prev.map(res =>
+        res.id === id ? { ...res, status: 'CANCELLED' } : res
+      ));
 
       // Update User Reservations State
       if (viewingReservationsUser && viewingReservationsUser.id === userId) {
@@ -225,7 +269,12 @@ export default function AdminDashboard() {
   };
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CourtFormData>({
-    resolver: zodResolver(courtSchema) as any
+    resolver: zodResolver(courtSchema) as any,
+    defaultValues: {
+      openTime: "08:00",
+      closeTime: "22:00",
+      activeDays: [1, 2, 3, 4, 5, 6, 0]
+    }
   });
 
   const { register: registerMaintenance, handleSubmit: handleSubmitMaintenance, reset: resetMaintenance } = useForm<MaintenanceFormData>({
@@ -244,6 +293,9 @@ export default function AdminDashboard() {
       setValue('surface', editingCourt.surface);
       setValue('pricePerHour', editingCourt.pricePerHour);
       setValue('isActive', editingCourt.isActive);
+      setValue('openTime', editingCourt.openTime || "08:00");
+      setValue('closeTime', editingCourt.closeTime || "22:00");
+      setValue('activeDays', editingCourt.activeDays || [1, 2, 3, 4, 5, 6, 0]);
       setShowAddCourt(true);
     } else {
       reset();
@@ -267,6 +319,9 @@ export default function AdminDashboard() {
         ]);
         setCourts(courtsRes.data);
         setMaintenances(maintRes.data);
+      } else if (activeTab === 'reservations') {
+        const res = await api.get('/reservations');
+        setAllReservations(res.data);
       }
     } catch (error) {
       console.error('Error al cargar datos:', error);
@@ -348,9 +403,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Panel de Administración</h2>
-        <div className="flex space-x-2 bg-white p-1 rounded-lg shadow-sm border">
+        <div className="flex w-full md:w-auto overflow-x-auto space-x-2 bg-white p-1 rounded-lg shadow-sm border shrink-0">
           <button
             onClick={() => setActiveTab('stats')}
             className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${activeTab === 'stats' ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
@@ -368,6 +423,12 @@ export default function AdminDashboard() {
             className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${activeTab === 'users' ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Users size={18} /> Usuarios
+          </button>
+          <button
+            onClick={() => setActiveTab('reservations')}
+            className={`px-4 py-2 rounded-md flex items-center gap-2 transition-colors ${activeTab === 'reservations' ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <CalendarIcon size={18} /> Reservas
           </button>
         </div>
       </div>
@@ -403,12 +464,20 @@ export default function AdminDashboard() {
                       <option value="month">Mensual</option>
                     </select>
 
-                    <button
-                      onClick={handleExportCSV}
-                      className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm font-medium text-sm"
-                    >
-                      <Download size={16} /> Exportar CSV
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={handleExportCSV}
+                        className="flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm font-medium text-sm"
+                      >
+                        <Download size={16} /> CSV
+                      </button>
+                      <button
+                        onClick={handleExportPDF}
+                        className="flex items-center justify-center gap-2 bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm font-medium text-sm"
+                      >
+                        <Download size={16} /> PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -692,18 +761,23 @@ export default function AdminDashboard() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                         <select {...register('type')} className="w-full border p-2 rounded">
-                          <option value="Indoor">Interior</option>
-                          <option value="Outdoor">Exterior</option>
+                          <option value="Interior">Interior</option>
+                          <option value="Exterior">Exterior</option>
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Deporte</label>
                         <select {...register('sport')} className="w-full border p-2 rounded">
-                          <option value="Padel">Pádel</option>
-                          <option value="Tennis">Tenis</option>
-                          <option value="Basketball">Baloncesto</option>
-                          <option value="Football">Fútbol</option>
-                          <option value="Volleyball">Voleibol</option>
+                          <option value="Pádel">Pádel</option>
+                          <option value="Tenis">Tenis</option>
+                          <option value="Baloncesto">Baloncesto</option>
+                          <option value="Fútbol">Fútbol</option>
+                          <option value="Voleibol">Voleibol</option>
+                          <option value="Bádminton">Bádminton</option>
+                          <option value="Frontón">Frontón</option>
+                          <option value="Squash">Squash</option>
+                          <option value="Tenis de Mesa">Tenis de Mesa</option>
+                          <option value="Hockey">Hockey</option>
                         </select>
                         {errors.sport && <span className="text-red-500 text-xs">{errors.sport.message}</span>}
                       </div>
@@ -718,7 +792,42 @@ export default function AdminDashboard() {
                         {errors.pricePerHour && <span className="text-red-500 text-xs">{errors.pricePerHour.message}</span>}
                       </div>
                     </div>
-                    <div className="mt-3 flex justify-end gap-2">
+
+                    {/* SCHEDULE ROW */}
+                    <div className="mt-4 border-t pt-4">
+                      <h5 className="font-bold text-sm text-gray-700 mb-2">Horario de Disponibilidad</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex gap-4">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Apertura</label>
+                            <input {...register('openTime')} type="time" className="border p-2 rounded text-sm w-32" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Cierre</label>
+                            <input {...register('closeTime')} type="time" className="border p-2 rounded text-sm w-32" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Días Activos</label>
+                          <div className="flex flex-wrap gap-2 text-sm">
+                            {[{ v: 1, l: 'L' }, { v: 2, l: 'M' }, { v: 3, l: 'X' }, { v: 4, l: 'J' }, { v: 5, l: 'V' }, { v: 6, l: 'S' }, { v: 0, l: 'D' }].map(day => (
+                              <label key={day.v} className="flex items-center gap-1 bg-white border border-gray-200 px-2 py-1 rounded cursor-pointer hover:bg-gray-50 flex-1 justify-center min-w-[32px]">
+                                <input
+                                  type="checkbox"
+                                  value={day.v}
+                                  {...register('activeDays')}
+                                  className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                                />
+                                {day.l}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex justify-end gap-2">
                       <button type="button" onClick={() => setShowAddCourt(false)} className="text-gray-500 hover:text-gray-700">Cancelar</button>
                       <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar Pista</button>
                     </div>
@@ -726,7 +835,7 @@ export default function AdminDashboard() {
                 )}
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left min-w-[800px]">
                     <thead>
                       <tr className="border-b bg-gray-50 text-gray-600 text-sm">
                         <th className="p-3">Nombre</th>
@@ -749,10 +858,10 @@ export default function AdminDashboard() {
                             <td className="p-3 font-medium">{court.name}</td>
                             <td className="p-3">
                               <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
-                                {court.sport || 'Padel'}
+                                {court.sport || 'Pádel'}
                               </span>
                             </td>
-                            <td className="p-3 text-gray-600">{court.type === 'Indoor' ? 'Interior' : 'Exterior'}</td>
+                            <td className="p-3 text-gray-600">{court.type}</td>
                             <td className="p-3 text-gray-600">{court.surface}</td>
                             <td className="p-3 font-bold">€{court.pricePerHour}</td>
                             <td className="p-3">
@@ -862,7 +971,7 @@ export default function AdminDashboard() {
                 )}
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+                  <table className="w-full text-left min-w-[800px]">
                     <thead>
                       <tr className="border-b bg-gray-50 text-gray-600 text-sm">
                         <th className="p-3">Nombre</th>
@@ -949,62 +1058,160 @@ export default function AdminDashboard() {
                     {userReservations.length === 0 ? (
                       <p className="text-center text-gray-500 py-8">No tiene reservas.</p>
                     ) : (
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="bg-gray-50 text-sm text-gray-600 border-b">
-                            <th className="p-3">Fecha</th>
-                            <th className="p-3">Hora</th>
-                            <th className="p-3">Pista</th>
-                            <th className="p-3">Precio</th>
-                            <th className="p-3">Estado</th>
-                            <th className="p-3 text-right">Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {userReservations.map((res: any) => (
-                            <tr key={res.id} className="border-b">
-                              <td className="p-3">{format(new Date(res.startTime), 'dd/MM/yyyy')}</td>
-                              <td className="p-3">{format(new Date(res.startTime), 'HH:mm')} - {format(new Date(res.endTime), 'HH:mm')}</td>
-                              <td className="p-3">{res.court.name}</td>
-                              <td className="p-3 font-bold">€{Number(res.totalPrice).toFixed(2)}</td>
-                              <td className="p-3">
-                                <span className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                  }`}>
-                                  {res.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}
-                                </span>
-                              </td>
-                              <td className="p-3 text-right">
-                                {res.status === 'CONFIRMED' && new Date(res.startTime) > new Date() && (
-                                  <div className="flex justify-end gap-2">
-                                    <button
-                                      onClick={() => {
-                                        setEditingReservation(res);
-                                        setIsEditModalOpen(true);
-                                      }}
-                                      className="text-indigo-600 hover:text-indigo-800 text-xs border border-indigo-200 px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1"
-                                    >
-                                      <Edit size={12} /> Editar
-                                    </button>
-                                    <button
-                                      onClick={() => handleCancelReservation(res.id, viewingReservationsUser.id)}
-                                      className="text-red-500 hover:text-red-700 text-xs border border-red-200 px-2 py-1 rounded hover:bg-red-50"
-                                    >
-                                      Cancelar
-                                    </button>
-                                  </div>
-                                )}
-                              </td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left min-w-[600px]">
+                          <thead>
+                            <tr className="bg-gray-50 text-sm text-gray-600 border-b">
+                              <th className="p-3">Fecha</th>
+                              <th className="p-3">Hora</th>
+                              <th className="p-3">Pista</th>
+                              <th className="p-3">Precio</th>
+                              <th className="p-3">Estado</th>
+                              <th className="p-3 text-right">Acciones</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {userReservations.map((res: any) => (
+                              <tr key={res.id} className="border-b">
+                                <td className="p-3">{format(new Date(res.startTime), 'dd/MM/yyyy')}</td>
+                                <td className="p-3">{format(new Date(res.startTime), 'HH:mm')} - {format(new Date(res.endTime), 'HH:mm')}</td>
+                                <td className="p-3">{res.court.name}</td>
+                                <td className="p-3 font-bold">€{Number(res.totalPrice).toFixed(2)}</td>
+                                <td className="p-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
+                                    {res.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}
+                                  </span>
+                                </td>
+                                <td className="p-3 text-right">
+                                  {res.status === 'CONFIRMED' && new Date(res.startTime) > new Date() && (
+                                    <div className="flex justify-end gap-2">
+                                      <button
+                                        onClick={() => {
+                                          setEditingReservation(res);
+                                          setIsEditModalOpen(true);
+                                        }}
+                                        className="text-indigo-600 hover:text-indigo-800 text-xs border border-indigo-200 px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1"
+                                      >
+                                        <Edit size={12} /> Editar
+                                      </button>
+                                      <button
+                                        onClick={() => handleCancelReservation(res.id, viewingReservationsUser.id)}
+                                        className="text-red-500 hover:text-red-700 text-xs border border-red-200 px-2 py-1 rounded hover:bg-red-50"
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
             )}
 
-            {editingReservation && viewingReservationsUser && (
+            {activeTab === 'reservations' && (
+              <div>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                  <h3 className="text-xl font-bold text-gray-800">Todas las Reservas</h3>
+                  <div className="flex gap-4 w-full md:w-auto">
+                    <input
+                      type="date"
+                      value={resFilterDate}
+                      onChange={e => setResFilterDate(e.target.value)}
+                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+                    />
+                    <select
+                      value={resFilterSport}
+                      onChange={e => setResFilterSport(e.target.value)}
+                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+                    >
+                      <option value="">Todos los deportes</option>
+                      <option value="Pádel">Pádel</option>
+                      <option value="Tenis">Tenis</option>
+                      <option value="Baloncesto">Baloncesto</option>
+                      <option value="Fútbol">Fútbol</option>
+                      <option value="Voleibol">Voleibol</option>
+                      <option value="Bádminton">Bádminton</option>
+                      <option value="Frontón">Frontón</option>
+                      <option value="Squash">Squash</option>
+                      <option value="Tenis de Mesa">Tenis de Mesa</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[800px]">
+                    <thead>
+                      <tr className="bg-gray-50 text-sm text-gray-600 border-b">
+                        <th className="p-3">ID</th>
+                        <th className="p-3">Fecha y Hora</th>
+                        <th className="p-3">Pista</th>
+                        <th className="p-3">Usuario</th>
+                        <th className="p-3">Precio</th>
+                        <th className="p-3">Estado</th>
+                        <th className="p-3 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allReservations
+                        .filter(r => !resFilterSport || r.court.sport === resFilterSport)
+                        .filter(r => !resFilterDate || r.startTime.startsWith(resFilterDate))
+                        .map((res: any) => (
+                          <tr key={res.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3 text-xs text-gray-500">{res.id.slice(-6)}</td>
+                            <td className="p-3">
+                              <div className="font-semibold">{format(new Date(res.startTime), 'dd/MM/yyyy')}</div>
+                              <div className="text-sm text-gray-500">
+                                {format(new Date(res.startTime), 'HH:mm')} - {format(new Date(res.endTime), 'HH:mm')}
+                              </div>
+                            </td>
+                            <td className="p-3">{res.court.name}</td>
+                            <td className="p-3">{res.user.name}</td>
+                            <td className="p-3 font-bold">€{Number(res.totalPrice).toFixed(2)}</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {res.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-right">
+                              {res.status === 'CONFIRMED' && new Date(res.startTime) > new Date() && (
+                                <div className="flex justify-end gap-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingReservation(res);
+                                      setIsEditModalOpen(true);
+                                    }}
+                                    className="text-indigo-600 hover:text-indigo-800 text-xs border border-indigo-200 px-2 py-1 rounded hover:bg-indigo-50 flex items-center gap-1"
+                                  >
+                                    <Edit size={12} /> Editar
+                                  </button>
+                                  <button
+                                    onClick={() => handleCancelReservation(res.id, res.userId)}
+                                    className="text-red-500 hover:text-red-700 text-xs border border-red-200 px-2 py-1 rounded hover:bg-red-50"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                  {allReservations.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">No hay reservas en el sistema.</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {editingReservation && (
               <EditReservationModal
                 isOpen={isEditModalOpen}
                 onClose={() => {
@@ -1013,7 +1220,10 @@ export default function AdminDashboard() {
                 }}
                 reservation={editingReservation}
                 isAdmin={true}
-                onSuccess={() => fetchUserReservations(viewingReservationsUser.id)}
+                onSuccess={() => {
+                  if (activeTab === 'reservations') fetchData();
+                  if (viewingReservationsUser) fetchUserReservations(viewingReservationsUser.id);
+                }}
               />
             )}
 

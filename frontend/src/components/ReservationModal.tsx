@@ -89,7 +89,7 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
           {/* Court Info */}
           <div className="bg-blue-50 p-3 rounded border border-blue-100 mb-4">
             <p className="font-semibold text-blue-900">{court.name}</p>
-            <p className="text-sm text-blue-700">Pista {court.type === 'Indoor' ? 'Interior' : 'Exterior'}</p>
+            <p className="text-sm text-blue-700">Pista {court.type}</p>
             <p className="text-sm text-blue-700">
               {format(startTime, 'PPPP', { locale: es })} a las {format(startTime, 'p', { locale: es })}
             </p>
