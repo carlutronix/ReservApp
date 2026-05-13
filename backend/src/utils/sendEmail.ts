@@ -11,7 +11,7 @@ export const sendEmail = async (options: { email: string; subject: string; messa
         },
         connectionTimeout: 10000,
         family: 4
-    });
+    } as any);
 
     const message = {
         from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
