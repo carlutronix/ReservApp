@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reservapp_postgres
+    environment:
+      POSTGRES_USER: reservapp_user
+      POSTGRES_PASSWORD: reservapp_password
+      POSTGRES_DB: reservapp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U reservapp_user -d reservapp_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: reservapp_backend
+    command: sh -c "npx prisma db push && npm start"
+    ports:
+      - "3000:3000"
+      - "5555:5555"
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
+      - JWT_SECRET=reservapp_secret_key_2024
+      - NODE_ENV=development
+      - TZ=Europe/Madrid
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: reservapp_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:

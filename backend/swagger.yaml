@@ -1,0 +1,117 @@
+openapi: 3.0.0
+info:
+  title: ReservApp API
+  version: 1.0.0
+  description: API for managing ReservApp court reservations
+servers:
+  - url: http://localhost:3000/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+      responses:
+        201:
+          description: User registered
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+  /courts:
+    get:
+      summary: Get all courts
+      responses:
+        200:
+          description: List of courts
+    post:
+      summary: Create court
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                surface:
+                  type: string
+                pricePerHour:
+                  type: number
+      responses:
+        201:
+          description: Court created
+  /reservations:
+    get:
+      summary: Get reservations
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: courtId
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of reservations
+    post:
+      summary: Create reservation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courtId:
+                  type: string
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
+      responses:
+        201:
+          description: Reservation created
