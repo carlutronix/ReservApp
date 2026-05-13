@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../api/client';
-import { User, Lock, Mail, Save } from 'lucide-react';
+import { User, Lock, Mail, Save, Eye, EyeOff } from 'lucide-react';
 
 const profileSchema = z.object({
     name: z.string().min(2, 'El nombre es muy corto'),
@@ -37,6 +37,9 @@ export default function Profile() {
     const { user } = useAuth(); // Assuming login updates user state, or we need a reload/fetchUser
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 
     const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
@@ -120,11 +123,18 @@ export default function Profile() {
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <input
-                                type="password"
+                                type={showNewPassword ? 'text' : 'password'}
                                 {...register('password')}
-                                className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all pr-10"
                                 placeholder="Nueva contraseña"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                            >
+                                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
                     </div>
@@ -134,11 +144,18 @@ export default function Profile() {
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <input
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 {...register('confirmPassword')}
-                                className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                                className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all pr-10"
                                 placeholder="Repetir nueva contraseña"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                            >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword.message}</p>}
                     </div>
@@ -151,11 +168,18 @@ export default function Profile() {
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 text-yellow-400" size={18} />
                             <input
-                                type="password"
+                                type={showCurrentPassword ? 'text' : 'password'}
                                 {...register('currentPassword')}
-                                className="w-full pl-10 p-2.5 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white"
+                                className="w-full pl-10 p-2.5 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white pr-10"
                                 placeholder="Tu contraseña actual"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-3 top-3 text-yellow-400 hover:text-yellow-600"
+                            >
+                                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {errors.currentPassword && <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>}
                     </div>
