@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Court" ADD COLUMN "activeDays" INTEGER[] DEFAULT ARRAY[1, 2, 3, 4, 5, 6, 0]::INTEGER[],
+ADD COLUMN "openTime" TEXT NOT NULL DEFAULT '08:00',
+ADD COLUMN "closeTime" TEXT NOT NULL DEFAULT '22:00';
+
+-- AlterTable
+ALTER TABLE "Reservation" ADD COLUMN "attendanceStatus" TEXT NOT NULL DEFAULT 'PENDING',
+ADD COLUMN "checkedInAt" TIMESTAMP(3);
