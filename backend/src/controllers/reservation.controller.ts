@@ -499,31 +499,44 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
     const userId = req.user.id;
     const now = new Date();
 
-    // 15 mins antes hasta 30 mins después del inicio
-    const timeLowerBound = new Date(now.getTime() - 30 * 60000); 
-    const timeUpperBound = new Date(now.getTime() + 15 * 60000);
-
+    // 1. Buscamos la próxima reserva que no haya terminado aún
     const reservation = await prisma.reservation.findFirst({
       where: {
         courtId: String(courtId),
         userId: String(userId),
         status: 'CONFIRMED',
-        startTime: {
-          gte: timeLowerBound,
-          lte: timeUpperBound
+        endTime: {
+          gt: now
         }
       },
       orderBy: { startTime: 'asc' }
     });
 
     if (!reservation) {
-      return res.status(404).json({ error: 'No tienes una reserva válida en esta pista para este horario' });
+      return res.status(404).json({ error: 'No tienes ninguna reserva confirmada pendiente para esta pista.' });
     }
 
+    // 2. Comprobamos si es demasiado pronto (1 hora antes)
+    const oneHourBefore = new Date(reservation.startTime.getTime() - 60 * 60000);
+    
+    if (now < oneHourBefore) {
+      const startTimeStr = reservation.startTime.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: 'UTC'
+      });
+
+      return res.status(400).json({ 
+        error: `Aún es pronto para hacer el check-in. Tu reserva empieza a las ${startTimeStr}. Podrás realizarlo desde 1 hora antes.` 
+      });
+    }
+
+    // 3. Si ya hizo check-in
     if (reservation.attendanceStatus === 'CHECKED_IN') {
-      return res.status(400).json({ error: 'Ya has hecho check-in para esta reserva' });
+      return res.status(400).json({ error: 'Ya has realizado el check-in para esta reserva.' });
     }
 
+    // 4. Todo OK, actualizamos
     const updated = await prisma.reservation.update({
       where: { id: reservation.id },
       data: {
@@ -532,7 +545,8 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.json({ message: 'Check-in confirmado con éxito', reservation: updated });
+    res.json({ message: 'Check-in confirmado con éxito. ¡Disfruta de la pista!', reservation: updated });
+
   } catch (error) {
     console.error('Error during check-in:', error);
     res.status(500).json({ error: 'Error interno del servidor durante el check-in' });
