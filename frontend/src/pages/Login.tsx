@@ -43,7 +43,10 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-extrabold text-indigo-600 tracking-tight mb-2">ReservApp</h1>
+          <h2 className="text-xl font-medium text-gray-600">Iniciar Sesión</h2>
+        </div>
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
