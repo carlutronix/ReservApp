@@ -1,25 +1,27 @@
-import nodemailer from 'nodemailer';
-
 export const sendEmail = async (options: { email: string; subject: string; message: string }) => {
-    const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: Number(process.env.SMTP_PORT) === 465,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+    const apiKey = process.env.BREVO_API_KEY;
+    
+    if (!apiKey) {
+        throw new Error('La variable BREVO_API_KEY no está configurada');
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': apiKey,
+            'content-type': 'application/json'
         },
-        connectionTimeout: 10000,
-        family: 4
-    } as any);
+        body: JSON.stringify({
+            sender: { name: 'ReservApp', email: 'crey18119@gmail.com' },
+            to: [{ email: options.email }],
+            subject: options.subject,
+            htmlContent: `<p>${options.message.replace(/\n/g, '<br>')}</p>`
+        })
+    });
 
-    const message = {
-        from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-        to: options.email,
-        subject: options.subject,
-        text: options.message,
-        html: `<p>${options.message.replace(/\n/g, '<br>')}</p>`,
-    };
-
-    await transporter.sendMail(message);
+    if (!response.ok) {
+        const errorData: any = await response.json();
+        throw new Error(errorData.message || 'Error al enviar el email por API de Brevo');
+    }
 };
