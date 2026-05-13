@@ -138,8 +138,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
 
       res.json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
-    } catch (error) {
-      console.error('Email could not be sent', error);
+    } catch (error: any) {
+      console.error('CRITICAL: Email could not be sent. Check your SMTP configuration.', error);
       // Revert token if email fails
       await prisma.user.update({
         where: { email },
@@ -148,7 +148,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
           resetPasswordExpires: null,
         },
       });
-      return res.status(500).json({ error: 'El correo no pudo ser enviado' });
+      return res.status(500).json({ 
+        error: 'El correo no pudo ser enviado. Error técnico: ' + (error.message || 'Error desconocido')
+      });
     }
 
   } catch (error: any) {

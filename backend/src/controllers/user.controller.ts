@@ -69,21 +69,44 @@ export const createUser = async (req: Request, res: Response) => {
 
 const updateUserSchema = z.object({
   name: z.string().optional(),
-  email: z.string().email().optional(), // Add email
+  email: z.string().email().optional(),
   role: z.enum(['ADMIN', 'STAFF', 'MEMBER']).optional(),
   isBlocked: z.boolean().optional(),
   password: z.string().min(6).optional(),
+  currentPassword: z.string().optional(),
   image: z.string().optional(),
 });
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const data = updateUserSchema.parse(req.body);
+    const bcrypt = require('bcryptjs');
+
+    // Permissions check: only self-update or ADMIN can update
+    if (req.user.id !== id && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'No tienes permiso para actualizar este perfil' });
+    }
 
     const updateData: any = { ...data };
+    delete updateData.currentPassword; // Don't save currentPassword to DB
+
     if (data.password) {
-      const bcrypt = require('bcryptjs');
+      // If user is updating their own password, require current password
+      if (req.user.role !== 'ADMIN' || req.user.id === id) {
+        if (!data.currentPassword) {
+          return res.status(400).json({ error: 'Debes proporcionar tu contraseña actual para cambiarla' });
+        }
+
+        const currentUser = await prisma.user.findUnique({ where: { id: String(id) } });
+        if (!currentUser) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+        const isMatch = await bcrypt.compare(data.currentPassword, currentUser.password);
+        if (!isMatch) {
+          return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+        }
+      }
+
       updateData.password = await bcrypt.hash(data.password, 10);
     }
 

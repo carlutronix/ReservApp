@@ -12,6 +12,7 @@ const profileSchema = z.object({
     image: z.string().optional(),
     password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
     confirmPassword: z.string().optional().or(z.literal('')),
+    currentPassword: z.string().optional().or(z.literal('')),
 }).refine((data) => {
     if (data.password && data.password !== data.confirmPassword) {
         return false;
@@ -20,6 +21,14 @@ const profileSchema = z.object({
 }, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
+}).refine((data) => {
+    if (data.password && !data.currentPassword) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Debes introducir tu contraseña actual para cambiarla",
+    path: ["currentPassword"],
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -29,7 +38,7 @@ export default function Profile() {
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProfileFormData>({
+    const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
             name: user?.name || '',
@@ -37,6 +46,8 @@ export default function Profile() {
             image: user?.image || '',
         }
     });
+
+    const newPassword = watch('password');
 
     const onSubmit = async (data: ProfileFormData) => {
         try {
@@ -49,16 +60,12 @@ export default function Profile() {
             };
             if (data.password) {
                 updateData.password = data.password;
+                updateData.currentPassword = data.currentPassword;
             }
 
             await api.put(`/users/${user?.id}`, updateData);
 
-            // Update local storage or context if possible, or just alert
-            // Ideally AuthContext exposes a refreshUser method. For now, we rely on backend update.
-            setSuccess('Perfil actualizado correctamente. Si has cambiado el email, es posible que debas volver a iniciar sesión.');
-
-            // If we could update context: login(res.data.token) or setUser(res.data)
-            // Assuming naive implementation for now
+            setSuccess('Perfil actualizado correctamente. Si has cambiado el email o contraseña, es posible que debas volver a iniciar sesión.');
         } catch (err: any) {
             setError(err.response?.data?.error || 'Error al actualizar el perfil');
             console.error(err);
@@ -109,33 +116,50 @@ export default function Profile() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block">Nueva Contraseña</label>
+                        <label className="text-sm font-medium text-gray-700 block text-indigo-600 font-bold">Nueva Contraseña (Opcional)</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <input
                                 type="password"
                                 {...register('password')}
                                 className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                placeholder="Dejar en blanco para mantener"
+                                placeholder="Nueva contraseña"
                             />
                         </div>
                         {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block">Confirmar Contraseña</label>
+                        <label className="text-sm font-medium text-gray-700 block">Confirmar Nueva Contraseña</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                             <input
                                 type="password"
                                 {...register('confirmPassword')}
                                 className="w-full pl-10 p-2.5 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                placeholder="Confirmar nueva contraseña"
+                                placeholder="Repetir nueva contraseña"
                             />
                         </div>
                         {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword.message}</p>}
                     </div>
                 </div>
+
+                {newPassword && (
+                    <div className="space-y-2 p-4 bg-yellow-50 rounded-lg border border-yellow-100 animate-fade-in">
+                        <label className="text-sm font-bold text-yellow-800 block">Confirmación de Seguridad</label>
+                        <p className="text-xs text-yellow-700 mb-2">Para cambiar la contraseña, introduce tu contraseña ACTUAL:</p>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 text-yellow-400" size={18} />
+                            <input
+                                type="password"
+                                {...register('currentPassword')}
+                                className="w-full pl-10 p-2.5 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none bg-white"
+                                placeholder="Tu contraseña actual"
+                            />
+                        </div>
+                        {errors.currentPassword && <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>}
+                    </div>
+                )}
 
                 <div className="pt-4 border-t flex justify-end">
                     <button
