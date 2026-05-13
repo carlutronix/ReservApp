@@ -10,7 +10,10 @@ export const sendEmail = async (options: { email: string; subject: string; messa
             pass: process.env.SMTP_PASS,
         },
         connectionTimeout: 10000,
-        family: 4 // Forzar IPv4 para evitar errores de red ENETUNREACH
+        family: 4, // Forzar IPv4 para evitar errores de red ENETUNREACH
+        tls: {
+            rejectUnauthorized: false
+        }
     });
 
     const message = {
