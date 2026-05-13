@@ -9,11 +9,6 @@ export const sendEmail = async (options: { email: string; subject: string; messa
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
         },
-        connectionTimeout: 10000,
-        family: 4, // Forzar IPv4 para evitar errores de red ENETUNREACH
-        tls: {
-            rejectUnauthorized: false
-        }
     });
 
     const message = {
@@ -24,9 +19,5 @@ export const sendEmail = async (options: { email: string; subject: string; messa
         html: `<p>${options.message.replace(/\n/g, '<br>')}</p>`,
     };
 
-    const info = await transporter.sendMail(message);
-
-    if (process.env.SMTP_HOST === 'smtp.ethereal.email') {
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-    }
+    await transporter.sendMail(message);
 };
