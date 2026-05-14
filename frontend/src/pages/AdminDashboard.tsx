@@ -425,7 +425,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 relative">
       {showWelcome && lastLogin && (
-        <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-white border-l-4 border-indigo-500 shadow-lg rounded-r-lg p-4 flex items-center gap-3 max-w-sm">
             <div className="bg-indigo-100 p-2 rounded-full">
               <CalendarIcon className="text-indigo-600" size={20} />
