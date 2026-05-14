@@ -517,10 +517,23 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'No tienes ninguna reserva confirmada pendiente para esta pista.' });
     }
 
-    // 2. Comprobamos si es demasiado pronto (1 hora antes)
-    const oneHourBefore = new Date(reservation.startTime.getTime() - 60 * 60000);
+    // Obtenemos la configuración de la pista
+    const court = await prisma.court.findUnique({
+      where: { id: reservation.courtId }
+    });
+
+    if (!court) {
+      return res.status(404).json({ error: 'Pista no encontrada.' });
+    }
+
+    // 2. Comprobamos si es demasiado pronto o demasiado tarde
+    const leadTime = court.checkInLeadTime || 60;
+    const followUpTime = court.checkInFollowUpTime || 30;
+
+    const checkInStart = new Date(reservation.startTime.getTime() - leadTime * 60000);
+    const checkInEnd = new Date(reservation.startTime.getTime() + followUpTime * 60000);
     
-    if (now < oneHourBefore) {
+    if (now < checkInStart) {
       const startTimeStr = reservation.startTime.toLocaleTimeString('es-ES', { 
         hour: '2-digit', 
         minute: '2-digit',
@@ -528,7 +541,13 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
       });
 
       return res.status(400).json({ 
-        error: `Aún es pronto para hacer el check-in. Tu reserva empieza a las ${startTimeStr}. Podrás realizarlo desde 1 hora antes.` 
+        error: `Aún es pronto para hacer el check-in. Tu reserva empieza a las ${startTimeStr}. Podrás realizarlo desde ${leadTime} minutos antes.` 
+      });
+    }
+
+    if (now > checkInEnd) {
+      return res.status(400).json({
+        error: `El tiempo para realizar el check-in ha expirado. (Límite: ${followUpTime} min después del inicio)`
       });
     }
 

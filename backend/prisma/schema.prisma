@@ -34,8 +34,10 @@ model Court {
   isActive     Boolean       @default(true)
   openTime     String        @default("08:00")
   closeTime    String        @default("22:00")
-  activeDays   Int[]         @default([1, 2, 3, 4, 5, 6, 0])
-  createdAt    DateTime      @default(now())
+  activeDays           Int[]         @default([1, 2, 3, 4, 5, 6, 0])
+  checkInLeadTime      Int           @default(60) // minutes before start
+  checkInFollowUpTime  Int           @default(30) // minutes after start
+  createdAt            DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   reservations Reservation[]

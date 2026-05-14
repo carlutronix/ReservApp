@@ -62,6 +62,8 @@ interface Court {
   openTime?: string;
   closeTime?: string;
   activeDays?: number[];
+  checkInLeadTime?: number;
+  checkInFollowUpTime?: number;
 }
 
 // Schema for New Court
@@ -74,7 +76,9 @@ const courtSchema = z.object({
   isActive: z.boolean().optional(),
   openTime: z.string().optional().default("08:00"),
   closeTime: z.string().optional().default("22:00"),
-  activeDays: z.array(z.coerce.number()).optional().default([1, 2, 3, 4, 5, 6, 0])
+  activeDays: z.array(z.coerce.number()).optional().default([1, 2, 3, 4, 5, 6, 0]),
+  checkInLeadTime: z.coerce.number().min(0, 'No puede ser negativo').default(60),
+  checkInFollowUpTime: z.coerce.number().min(0, 'No puede ser negativo').default(30),
 });
 
 type CourtFormData = z.infer<typeof courtSchema>;
@@ -294,7 +298,9 @@ export default function AdminDashboard() {
     defaultValues: {
       openTime: "08:00",
       closeTime: "22:00",
-      activeDays: [1, 2, 3, 4, 5, 6, 0]
+      activeDays: [1, 2, 3, 4, 5, 6, 0],
+      checkInLeadTime: 60,
+      checkInFollowUpTime: 30
     }
   });
 
@@ -317,6 +323,8 @@ export default function AdminDashboard() {
       setValue('openTime', editingCourt.openTime || "08:00");
       setValue('closeTime', editingCourt.closeTime || "22:00");
       setValue('activeDays', editingCourt.activeDays || [1, 2, 3, 4, 5, 6, 0]);
+      setValue('checkInLeadTime', editingCourt.checkInLeadTime || 60);
+      setValue('checkInFollowUpTime', editingCourt.checkInFollowUpTime || 30);
       setShowAddCourt(true);
     } else {
       reset();
@@ -324,7 +332,6 @@ export default function AdminDashboard() {
   }, [editingCourt, setValue, reset]);
 
   const fetchData = async () => {
-    // ... same as before
     setLoading(true);
     try {
       if (activeTab === 'stats') {
@@ -827,8 +834,18 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Precio/Hora</label>
-                        <input {...register('pricePerHour', { valueAsNumber: true })} type="number" placeholder="Precio/h" className="w-full border p-2 rounded" />
+                        <input type="number" {...register('pricePerHour', { valueAsNumber: true })} step="0.01" className="w-full border p-2 rounded" />
                         {errors.pricePerHour && <span className="text-red-500 text-xs">{errors.pricePerHour.message}</span>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" title="Antelación permitida para check-in">Antelación (min)</label>
+                        <input type="number" {...register('checkInLeadTime', { valueAsNumber: true })} className="w-full border p-2 rounded" />
+                        {errors.checkInLeadTime && <span className="text-red-500 text-xs">{errors.checkInLeadTime.message}</span>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1" title="Tiempo límite tras inicio para check-in">Margen Retraso (min)</label>
+                        <input type="number" {...register('checkInFollowUpTime', { valueAsNumber: true })} className="w-full border p-2 rounded" />
+                        {errors.checkInFollowUpTime && <span className="text-red-500 text-xs">{errors.checkInFollowUpTime.message}</span>}
                       </div>
                     </div>
 

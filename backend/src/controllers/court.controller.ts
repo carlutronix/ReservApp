@@ -13,6 +13,8 @@ const courtSchema = z.object({
   openTime: z.string().optional(),
   closeTime: z.string().optional(),
   activeDays: z.array(z.number()).optional(),
+  checkInLeadTime: z.number().optional().default(60),
+  checkInFollowUpTime: z.number().optional().default(30),
 });
 
 export const getCourts = async (req: Request, res: Response) => {
