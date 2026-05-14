@@ -61,7 +61,14 @@ export const login = async (req: Request, res: Response) => {
     console.log('Login attempt:', req.body.email);
     const { email, password } = loginSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({ 
+      where: { 
+        email: {
+          equals: email,
+          mode: 'insensitive'
+        }
+      } 
+    });
     if (!user) {
       console.log('User not found:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
@@ -107,7 +114,14 @@ export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({ 
+      where: { 
+        email: {
+          equals: email,
+          mode: 'insensitive'
+        }
+      } 
+    });
     if (!user) {
       // Return a generic response to prevent email scanning
       return res.json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
@@ -138,8 +152,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
 
       res.json({ message: 'Si el correo está registrado, recibirás un enlace de recuperación.' });
-    } catch (error: any) {
-      console.error('CRITICAL: Email could not be sent. Check your SMTP configuration.', error);
+    } catch (error) {
+      console.error('Email could not be sent', error);
       // Revert token if email fails
       await prisma.user.update({
         where: { email },
@@ -148,9 +162,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
           resetPasswordExpires: null,
         },
       });
-      return res.status(500).json({ 
-        error: 'El correo no pudo ser enviado. Error técnico: ' + (error.message || 'Error desconocido')
-      });
+      return res.status(500).json({ error: 'El correo no pudo ser enviado' });
     }
 
   } catch (error: any) {
