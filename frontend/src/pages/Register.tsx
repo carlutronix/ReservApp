@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -21,6 +22,7 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -59,11 +61,21 @@ export default function Register() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <input
-              type="password"
-              {...register('password')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                {...register('password')}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2 pr-10"
+                placeholder="Mínimo 6 caracteres"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
           </div>
           <button

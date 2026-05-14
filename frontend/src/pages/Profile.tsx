@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../api/client';
 import { User, Lock, Mail, Save, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const profileSchema = z.object({
     name: z.string().min(2, 'El nombre es muy corto'),
@@ -35,6 +36,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
     const { user } = useAuth(); // Assuming login updates user state, or we need a reload/fetchUser
+    const navigate = useNavigate();
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -68,7 +70,13 @@ export default function Profile() {
 
             await api.put(`/users/${user?.id}`, updateData);
 
-            setSuccess('Perfil actualizado correctamente. Si has cambiado el email o contraseña, es posible que debas volver a iniciar sesión.');
+            setSuccess('Perfil actualizado correctamente. Redirigiendo...');
+            
+            // Redirect after 1.5 seconds
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1500);
+
         } catch (err: any) {
             setError(err.response?.data?.error || 'Error al actualizar el perfil');
             console.error(err);

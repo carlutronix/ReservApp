@@ -235,8 +235,8 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                         let bgClass = '';
                         if (!court.isActive) bgClass = 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80';
                         else if (isOob) bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center';
-                        else if (fullyReserved) bgClass = 'bg-red-100 border-red-200 cursor-not-allowed';
                         else if (isPast) bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50';
+                        else if (fullyReserved) bgClass = 'bg-red-100 border-red-200 cursor-not-allowed';
                         else if (firstHalfReserved) bgClass = 'bg-gradient-to-r from-red-100 from-50% to-green-50 to-50% border-green-200 cursor-pointer hover:shadow-sm';
                         else if (secondHalfReserved) bgClass = 'bg-gradient-to-r from-green-50 from-50% to-red-100 to-50% border-green-200 cursor-pointer hover:shadow-sm';
                         else bgClass = 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm';
