@@ -91,7 +91,15 @@ type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 export default function AdminDashboard() {
   const location = useLocation();
   const lastLogin = location.state?.lastLogin;
+  const [showWelcome, setShowWelcome] = useState(!!lastLogin);
   const [activeTab, setActiveTab] = useState<'stats' | 'courts' | 'users' | 'reservations'>('stats');
+
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => setShowWelcome(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
   const [allReservations, setAllReservations] = useState<any[]>([]);
   const [resFilterSport, setResFilterSport] = useState<string>('');
   const [resFilterDate, setResFilterDate] = useState<string>('');
@@ -415,13 +423,23 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-6">
-      {lastLogin && (
-        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 text-sm">
-          Bienvenido Administrador. Tu último inicio de sesión fue el {' '}
-          <span className="font-bold">
-            {format(new Date(lastLogin), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-          </span>
+    <div className="space-y-6 relative">
+      {showWelcome && lastLogin && (
+        <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div className="bg-white border-l-4 border-indigo-500 shadow-lg rounded-r-lg p-4 flex items-center gap-3 max-w-sm">
+            <div className="bg-indigo-100 p-2 rounded-full">
+              <CalendarIcon className="text-indigo-600" size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800">¡Bienvenido Administrador!</p>
+              <p className="text-xs text-gray-500">
+                Última sesión: {format(new Date(lastLogin), "d/MM/yy 'a las' HH:mm", { locale: es })}
+              </p>
+            </div>
+            <button onClick={() => setShowWelcome(false)} className="text-gray-400 hover:text-gray-600 ml-2">
+              <XCircle size={16} />
+            </button>
+          </div>
         </div>
       )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

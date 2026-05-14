@@ -5,11 +5,20 @@ import api from '../api/client';
 import { useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Calendar as CalendarIcon, XCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const location = useLocation();
   const lastLogin = location.state?.lastLogin;
+  const [showWelcome, setShowWelcome] = useState(!!lastLogin);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    if (showWelcome) {
+      const timer = setTimeout(() => setShowWelcome(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showWelcome]);
   const [selectedSport, setSelectedSport] = useState('Pádel');
   const [availableSports, setAvailableSports] = useState<string[]>([]);
 
@@ -37,13 +46,23 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col h-full lg:h-full">
-      {lastLogin && (
-        <div className="mb-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 text-sm">
-          Bienvenido de nuevo. Tu último inicio de sesión fue el {' '}
-          <span className="font-bold">
-            {format(new Date(lastLogin), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-          </span>
+    <div className="flex flex-col h-full lg:h-full relative">
+      {showWelcome && lastLogin && (
+        <div className="fixed top-20 right-4 z-50 animate-in fade-in slide-in-from-right-4 duration-500">
+          <div className="bg-white border-l-4 border-indigo-500 shadow-lg rounded-r-lg p-4 flex items-center gap-3 max-w-sm">
+            <div className="bg-indigo-100 p-2 rounded-full">
+              <CalendarIcon className="text-indigo-600" size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800">¡Bienvenido de nuevo!</p>
+              <p className="text-xs text-gray-500">
+                Última sesión: {format(new Date(lastLogin), "d/MM/yy 'a las' HH:mm", { locale: es })}
+              </p>
+            </div>
+            <button onClick={() => setShowWelcome(false)} className="text-gray-400 hover:text-gray-600 ml-2">
+              <XCircle size={16} />
+            </button>
+          </div>
         </div>
       )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
