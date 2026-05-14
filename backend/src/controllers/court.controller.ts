@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { z } from 'zod';
 
