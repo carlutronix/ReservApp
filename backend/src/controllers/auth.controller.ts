@@ -5,14 +5,14 @@ import prisma from '../config/prisma';
 import { z } from 'zod';
 
 const registerSchema = z.object({
-  email: z.string().email().transform(val => val.trim().toLowerCase()),
+  email: z.string().email().transform(val => val.trim()),
   password: z.string().min(6),
   name: z.string(),
   role: z.enum(['ADMIN', 'STAFF', 'MEMBER']).optional(),
 });
 
 const loginSchema = z.object({
-  email: z.string().email().transform(val => val.trim().toLowerCase()),
+  email: z.string().email().transform(val => val.trim()),
   password: z.string(),
 });
 
@@ -107,7 +107,7 @@ const crypto = require('crypto');
 import { sendEmail } from '../utils/sendEmail';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email().transform(val => val.trim().toLowerCase()),
+  email: z.string().email().transform(val => val.trim()),
 });
 
 export const forgotPassword = async (req: Request, res: Response) => {
