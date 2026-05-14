@@ -2,8 +2,13 @@ import { useState, useEffect } from 'react';
 import CourtSchedule from '../components/CourtSchedule';
 import MyReservationsList from '../components/MyReservationsList';
 import api from '../api/client';
+import { useLocation } from 'react-router-dom';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function Dashboard() {
+  const location = useLocation();
+  const lastLogin = location.state?.lastLogin;
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [selectedSport, setSelectedSport] = useState('Pádel');
   const [availableSports, setAvailableSports] = useState<string[]>([]);
@@ -33,6 +38,14 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-full lg:h-full">
+      {lastLogin && (
+        <div className="mb-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 text-sm">
+          Bienvenido de nuevo. Tu último inicio de sesión fue el {' '}
+          <span className="font-bold">
+            {format(new Date(lastLogin), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+          </span>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Inicio</h2>
 

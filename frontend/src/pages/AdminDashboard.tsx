@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useLocation } from 'react-router-dom';
 import { Users, LayoutGrid, BarChart3, Plus, Ban, Trash2, CheckCircle, XCircle, Pencil, Calendar as CalendarIcon, Edit, Download, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/client';
@@ -88,6 +89,8 @@ const maintenanceSchema = z.object({
 type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 
 export default function AdminDashboard() {
+  const location = useLocation();
+  const lastLogin = location.state?.lastLogin;
   const [activeTab, setActiveTab] = useState<'stats' | 'courts' | 'users' | 'reservations'>('stats');
   const [allReservations, setAllReservations] = useState<any[]>([]);
   const [resFilterSport, setResFilterSport] = useState<string>('');
@@ -413,6 +416,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {lastLogin && (
+        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 text-sm">
+          Bienvenido Administrador. Tu último inicio de sesión fue el {' '}
+          <span className="font-bold">
+            {format(new Date(lastLogin), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+          </span>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">Panel de Administración</h2>
         <div className="flex w-full md:w-auto overflow-x-auto space-x-2 bg-white p-1 rounded-lg shadow-sm border shrink-0">

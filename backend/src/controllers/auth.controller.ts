@@ -87,13 +87,24 @@ export const login = async (req: Request, res: Response) => {
 
     console.log('Login successful:', user.id);
 
+    // Save previous login to show to user, then update to current
+    const lastLogin = user.lastLogin;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date() }
+    });
+
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET!,
       { expiresIn: '1d' }
     );
 
-    res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role }, token });
+    res.json({ 
+      user: { id: user.id, email: user.email, name: user.name, role: user.role }, 
+      token,
+      lastLogin 
+    });
   } catch (error: any) {
     console.error('Login error:', error);
     if (error instanceof z.ZodError) {

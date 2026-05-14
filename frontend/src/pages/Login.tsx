@@ -28,12 +28,15 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', data);
       login(res.data.token, res.data.user);
+      
+      const navigateOptions = { state: { ...location.state, lastLogin: res.data.lastLogin } };
+      
       if (location.state?.returnUrl) {
-        navigate(location.state.returnUrl);
+        navigate(location.state.returnUrl, navigateOptions);
       } else if (res.data.user.role === 'ADMIN') {
-        navigate('/admin');
+        navigate('/admin', navigateOptions);
       } else {
-        navigate('/dashboard');
+        navigate('/dashboard', navigateOptions);
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
