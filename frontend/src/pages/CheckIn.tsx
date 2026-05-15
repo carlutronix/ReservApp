@@ -82,6 +82,7 @@ export default function CheckIn() {
           <h1 className="text-xl font-bold text-gray-800">Check-in</h1>
           <div className="w-10"></div> {/* Spacer for alignment */}
         </div>
+        <div className="text-[10px] text-gray-300 text-center -mt-4 mb-2">v2.0 - New Layout</div>
 
         <div className="flex-1 px-6 pb-10 flex flex-col">
           {court && reservation ? (
