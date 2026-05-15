@@ -572,3 +572,41 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Error interno del servidor durante el check-in' });
   }
 };
+
+export const getPendingCheckIn = async (req: Request, res: Response) => {
+  try {
+    const { courtId } = req.params;
+    const userId = (req as any).user.id;
+    const now = new Date();
+
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        courtId: String(courtId),
+        userId: String(userId),
+        status: 'CONFIRMED',
+        attendanceStatus: 'PENDING',
+        endTime: {
+          gt: now
+        }
+      },
+      include: {
+        user: {
+          select: { name: true }
+        },
+        court: {
+          select: { name: true }
+        }
+      },
+      orderBy: { startTime: 'asc' }
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ error: 'No tienes ninguna reserva confirmada pendiente para esta pista.' });
+    }
+
+    res.json(reservation);
+  } catch (error) {
+    console.error('Error fetching pending check-in:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
