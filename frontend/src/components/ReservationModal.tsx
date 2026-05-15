@@ -93,6 +93,9 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
             <p className="text-sm text-blue-700">
               {format(startTime, 'PPPP', { locale: es })} a las {format(startTime, 'p', { locale: es })}
             </p>
+            {court.pricePerHour > 0 && (
+              <p className="text-xs font-bold text-blue-800 mt-1">Precio: €{court.pricePerHour}/hora</p>
+            )}
           </div>
 
           {/* User Info (Read only) */}
@@ -123,7 +126,7 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
               <option value="2">2 Horas</option>
             </select>
             <p className="text-sm text-gray-500 mt-1">
-              Hora de inicio: {format(startTime, 'p', { locale: es })} • Hora de fin: {format(endTime, 'p', { locale: es })} • Total: €{price.toFixed(2)}
+              Hora de inicio: {format(startTime, 'p', { locale: es })} • Hora de fin: {format(endTime, 'p', { locale: es })} {court.pricePerHour > 0 && <span> • <strong>Total: €{price.toFixed(2)}</strong></span>}
             </p>
           </div>
 

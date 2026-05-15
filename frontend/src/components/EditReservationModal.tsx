@@ -199,6 +199,9 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
 
                     <div className="bg-blue-50 p-3 rounded border border-blue-100 mb-4">
                         <p className="font-semibold text-blue-900">{reservation.court.name}</p>
+                        {reservation.court.pricePerHour !== undefined && reservation.court.pricePerHour > 0 && (
+                            <p className="text-xs font-bold text-blue-800 mt-1">Precio: €{reservation.court.pricePerHour}/hora</p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -259,7 +262,7 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
                             <option value="2">2 Horas</option>
                         </select>
                         <p className="text-sm text-gray-500 mt-1">
-                            Hora de fin estimada: {newEndTimeStr} • Total aprox: €{price.toFixed(2)}
+                            Hora de fin estimada: {newEndTimeStr} {reservation.court.pricePerHour && reservation.court.pricePerHour > 0 ? <span> • <strong>Total aprox: €{price.toFixed(2)}</strong></span> : ''}
                         </p>
                     </div>
 

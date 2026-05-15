@@ -168,8 +168,12 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
 
               <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-200">
                 <div className="flex items-center font-semibold text-gray-700">
-                  <Euro size={16} />
-                  {Number(res.totalPrice).toFixed(2)}
+                  {Number(res.totalPrice) > 0 && (
+                    <>
+                      <Euro size={16} />
+                      {Number(res.totalPrice).toFixed(2)}
+                    </>
+                  )}
                 </div>
 
                 {activeTab === 'upcoming' && res.status !== 'CANCELLED' && !isDashboardMode && (

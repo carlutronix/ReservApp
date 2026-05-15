@@ -72,7 +72,7 @@ const courtSchema = z.object({
   type: z.enum(['Interior', 'Exterior']),
   sport: z.enum(['Pádel', 'Tenis', 'Baloncesto', 'Fútbol', 'Voleibol', 'Bádminton', 'Frontón', 'Squash', 'Tenis de Mesa', 'Hockey']),
   surface: z.string().min(2, 'La superficie es requerida'),
-  pricePerHour: z.number().min(1, 'El precio debe ser mayor a 0'),
+  pricePerHour: z.number().min(0, 'El precio no puede ser negativo'),
   isActive: z.boolean().optional(),
   openTime: z.string().optional().default("08:00"),
   closeTime: z.string().optional().default("22:00"),
@@ -774,7 +774,9 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">{format(new Date(res.createdAt), 'PP p', { locale: es })}</p>
-                          <p className="text-xs font-bold text-green-600">€{res.totalPrice}</p>
+                          {Number(res.totalPrice) > 0 && (
+                            <p className="text-xs font-bold text-green-600">€{res.totalPrice}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -833,9 +835,10 @@ export default function AdminDashboard() {
                         {errors.surface && <span className="text-red-500 text-xs">{errors.surface.message}</span>}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Precio/Hora</label>
-                        <input type="number" {...register('pricePerHour', { valueAsNumber: true })} step="0.01" className="w-full border p-2 rounded" />
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Precio/Hora (€)</label>
+                        <input type="number" {...register('pricePerHour', { valueAsNumber: true })} step="0.01" placeholder="0 para gratuita" className="w-full border p-2 rounded" />
                         {errors.pricePerHour && <span className="text-red-500 text-xs">{errors.pricePerHour.message}</span>}
+                        <p className="text-[10px] text-gray-400 mt-1">Usa 0 para que la pista sea gratuita.</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1" title="Antelación permitida para check-in">Antelación (min)</label>
@@ -919,7 +922,7 @@ export default function AdminDashboard() {
                             </td>
                             <td className="p-3 text-gray-600">{court.type}</td>
                             <td className="p-3 text-gray-600">{court.surface}</td>
-                            <td className="p-3 font-bold">€{court.pricePerHour}</td>
+                             <td className="p-3 font-bold">{court.pricePerHour > 0 ? `€${court.pricePerHour}` : ''}</td>
                             <td className="p-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-bold ${!court.isActive ? 'bg-red-100 text-red-700' :
                                 isMaintenance ? 'bg-orange-100 text-orange-700' :
