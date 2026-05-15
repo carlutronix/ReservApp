@@ -160,7 +160,7 @@ export default function CheckIn() {
                   <button
                     onClick={handleConfirmAccess}
                     disabled={processing}
-                    className="w-full bg-[#10b981] hover:bg-[#059669] text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-green-100 flex justify-center items-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-indigo-100 flex justify-center items-center gap-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95"
                   >
                     {processing ? (
                       <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></span>
