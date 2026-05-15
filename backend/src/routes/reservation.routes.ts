@@ -6,6 +6,8 @@ const router = Router();
 
 router.use(authenticateToken);
 
+router.get('/pending-checkin/:courtId', getPendingCheckIn);
+
 router.get('/export', authorizeRole(['ADMIN']), exportReservationsCSV);
 router.get('/:id/ics', exportReservationIcs);
 router.get('/', getReservations);
@@ -13,6 +15,5 @@ router.post('/', createReservation);
 router.put('/:id', updateReservation);
 router.put('/:id/cancel', cancelReservation);
 router.post('/checkin/:courtId', checkInReservation);
-router.get('/pending-checkin/:courtId', getPendingCheckIn);
 
 export default router;

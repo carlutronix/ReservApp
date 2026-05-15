@@ -59,6 +59,16 @@ export default function CheckIn() {
     }
   };
 
+  const getCourtImage = (sport: string) => {
+    const s = sport?.toLowerCase() || '';
+    if (s.includes('padel') || s.includes('pádel')) return '/assets/court_padel.png';
+    if (s.includes('tennis') || s.includes('tenis')) return '/assets/court_tennis.png';
+    if (s.includes('basket') || s.includes('baloncesto')) return '/assets/court_basketball.png';
+    if (s.includes('volley') || s.includes('voley')) return '/assets/court_volleyball.png';
+    if (s.includes('foot') || s.includes('fútbol') || s.includes('futbol')) return '/assets/court_football.png';
+    return '/assets/court_padel.png'; // default
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -88,9 +98,9 @@ export default function CheckIn() {
               {/* Image Illustration */}
               <div className="mb-8 flex justify-center">
                 <img 
-                  src="/assets/court_checkin.png" 
-                  alt="Court Illustration" 
-                  className="w-64 h-auto object-contain"
+                  src={getCourtImage(court.sport)} 
+                  alt={court.sport} 
+                  className="w-64 h-auto object-contain rounded-xl"
                 />
               </div>
 
@@ -182,8 +192,8 @@ export default function CheckIn() {
               <div className="bg-red-50 p-6 rounded-full mb-6">
                 <AlertCircle className="text-red-500 w-16 h-16" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Error de Check-in</h3>
-              <p className="text-gray-600 mb-10 max-w-xs">{message || 'No se ha encontrado ninguna reserva pendiente para esta pista.'}</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Reserva no encontrada</h3>
+              <p className="text-gray-600 mb-10 max-w-xs">{message.includes('No se pudo encontrar la información') ? 'No tienes ninguna reserva próxima o activa para esta pista.' : message}</p>
               <button
                 onClick={() => navigate('/dashboard')}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-4 px-6 rounded-2xl transition-colors"
