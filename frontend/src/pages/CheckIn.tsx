@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, XCircle, AlertCircle, MapPin, Clock, Calendar, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, Clock, Calendar, User as UserIcon, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 export default function CheckIn() {
   const { courtId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [court, setCourt] = useState<any>(null);
@@ -82,7 +81,6 @@ export default function CheckIn() {
           <h1 className="text-xl font-bold text-gray-800">Check-in</h1>
           <div className="w-10"></div> {/* Spacer for alignment */}
         </div>
-        <div className="text-[10px] text-gray-300 text-center -mt-4 mb-2">v2.0 - New Layout</div>
 
         <div className="flex-1 px-6 pb-10 flex flex-col">
           {court && reservation ? (
@@ -122,7 +120,7 @@ export default function CheckIn() {
                   <div className="flex-1 border-b border-gray-100 pb-2 flex justify-between items-end">
                     <span className="text-gray-500 font-medium">Hora</span>
                     <span className="text-gray-800 font-bold text-lg">
-                      {format(new Date(reservation.startTime), 'HH:mm', { timeZone: 'UTC' })} - {format(new Date(reservation.endTime), 'HH:mm', { timeZone: 'UTC' })}
+                      {format(new Date(reservation.startTime), 'HH:mm')} - {format(new Date(reservation.endTime), 'HH:mm')}
                     </span>
                   </div>
                 </div>
