@@ -98,7 +98,7 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
     }
 
     // Check if already reserved for the requested start time (30 min window minimum)
-    if (checkIntervalStatus(court.id, time, new Date(time.getTime() + 30 * 60000))) return;
+    if (getIntervalStatus(court.id, time, new Date(time.getTime() + 30 * 60000)) !== 'AVAILABLE') return;
 
     setSelectedSlot({ court, time });
     setIsModalOpen(true);
