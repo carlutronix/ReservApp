@@ -104,18 +104,8 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
     setIsModalOpen(true);
   };
 
-  const checkIntervalStatus = (courtId: string, start: Date, end: Date) => {
-    // Check reservations
-    const reserved = reservations.some(res => {
-      if (res.courtId !== courtId || res.status === 'CANCELLED') return false;
-      const resStart = parseISO(res.startTime);
-      const resEnd = parseISO(res.endTime);
-      return (start < resEnd && end > resStart); // Intersection check
-    });
-
-    if (reserved) return true;
-
-    // Check maintenances
+  const getIntervalStatus = (courtId: string, start: Date, end: Date): 'AVAILABLE' | 'RESERVED' | 'MAINTENANCE' => {
+    // 1. Check maintenances first (admin blocks take priority)
     const maintained = maintenances.some(m => {
       if (m.courtId !== courtId) return false;
       const mStart = parseISO(m.startTime);
@@ -123,7 +113,19 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
       return (start < mEnd && end > mStart);
     });
 
-    return maintained;
+    if (maintained) return 'MAINTENANCE';
+
+    // 2. Check reservations
+    const reserved = reservations.some(res => {
+      if (res.courtId !== courtId || res.status === 'CANCELLED') return false;
+      const resStart = parseISO(res.startTime);
+      const resEnd = parseISO(res.endTime);
+      return (start < resEnd && end > resStart); // Intersection check
+    });
+
+    if (reserved) return 'RESERVED';
+
+    return 'AVAILABLE';
   };
 
   const handleReservationSuccess = async () => {
@@ -221,10 +223,9 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                         const secondHalfStart = firstHalfEnd;
                         const secondHalfEnd = new Date(time.getTime() + 60 * 60000);
 
-                        const firstHalfReserved = checkIntervalStatus(court.id, firstHalfStart, firstHalfEnd);
-                        const secondHalfReserved = checkIntervalStatus(court.id, secondHalfStart, secondHalfEnd);
+                        const firstStatus = getIntervalStatus(court.id, firstHalfStart, firstHalfEnd);
+                        const secondStatus = getIntervalStatus(court.id, secondHalfStart, secondHalfEnd);
 
-                        const fullyReserved = firstHalfReserved && secondHalfReserved;
                         const isPast = time < new Date();
                         const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
                         const dayOfWeek = selectedDate.getDay();
@@ -233,23 +234,44 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                         const isOob = !isActiveDay || !isWithinHours;
 
                         let bgClass = '';
-                        if (!court.isActive) bgClass = 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80';
-                        else if (isOob) bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center';
-                        else if (isPast) bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50';
-                        else if (fullyReserved) bgClass = 'bg-red-100 border-red-200 cursor-not-allowed';
-                        else if (firstHalfReserved) bgClass = 'bg-gradient-to-r from-red-100 from-50% to-green-50 to-50% border-green-200 cursor-pointer hover:shadow-sm';
-                        else if (secondHalfReserved) bgClass = 'bg-gradient-to-r from-green-50 from-50% to-red-100 to-50% border-green-200 cursor-pointer hover:shadow-sm';
-                        else bgClass = 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm';
+                        let statusTitle = 'Disponible';
 
-                        const slotToBook = (firstHalfReserved && !secondHalfReserved) ? secondHalfStart : firstHalfStart;
+                        if (!court.isActive) {
+                          bgClass = 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80';
+                          statusTitle = 'Pista Bloqueada';
+                        } else if (isOob) {
+                          bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center';
+                          statusTitle = 'Pista Cerrada';
+                        } else if (isPast) {
+                          bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50';
+                          statusTitle = 'Pasado';
+                        } else {
+                          // Complex status based on both halves
+                          if (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') {
+                            bgClass = 'bg-yellow-100 border-yellow-200 cursor-not-allowed';
+                            statusTitle = 'Mantenimiento / Bloqueo';
+                          } else if (firstStatus === 'RESERVED' && secondStatus === 'RESERVED') {
+                            bgClass = 'bg-red-100 border-red-200 cursor-not-allowed';
+                            statusTitle = 'Reservado';
+                          } else if (firstStatus === 'RESERVED') {
+                            bgClass = 'bg-gradient-to-r from-red-100 from-50% to-green-50 to-50% border-green-200 cursor-pointer hover:shadow-sm';
+                          } else if (secondStatus === 'RESERVED') {
+                            bgClass = 'bg-gradient-to-r from-green-50 from-50% to-red-100 to-50% border-green-200 cursor-pointer hover:shadow-sm';
+                          } else {
+                            bgClass = 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm';
+                          }
+                        }
+
+                        const slotToBook = (firstStatus !== 'AVAILABLE' && secondStatus === 'AVAILABLE') ? secondHalfStart : firstHalfStart;
+                        const isFullyBooked = firstStatus !== 'AVAILABLE' && secondStatus !== 'AVAILABLE';
 
                         return (
                           <button
                             key={i}
                             onClick={() => handleSlotClick(court, slotToBook)}
-                            disabled={fullyReserved || isPast || !court.isActive || isOob}
+                            disabled={isFullyBooked || isPast || !court.isActive || isOob}
                             className={`w-full h-full min-h-[64px] rounded transition-all border ${bgClass}`}
-                            title={!court.isActive ? 'Pista Bloqueada' : isOob ? 'Pista Cerrada' : fullyReserved ? 'Reservado' : isPast ? 'Pasado' : 'Disponible'}
+                            title={statusTitle}
                           >
                             {isOob && !(!court.isActive) && <span className="text-[10px] text-gray-400 font-medium">Cerrado</span>}
                           </button>
