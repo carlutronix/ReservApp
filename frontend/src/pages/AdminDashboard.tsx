@@ -1144,9 +1144,14 @@ export default function AdminDashboard() {
                                 <td className="p-3">{res.court.name}</td>
                                 <td className="p-3 font-bold">€{Number(res.totalPrice).toFixed(2)}</td>
                                 <td className="p-3">
-                                  <span className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                    }`}>
-                                    {res.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                    res.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                    res.attendanceStatus === 'CHECKED_IN' ? 'bg-green-100 text-green-800' :
+                                    'bg-blue-100 text-blue-800'
+                                  }`}>
+                                    {res.status === 'CANCELLED' ? 'Cancelada' : 
+                                     res.attendanceStatus === 'CHECKED_IN' ? 'Confirmada' : 
+                                     'Reservada'}
                                   </span>
                                 </td>
                                 <td className="p-3 text-right">
@@ -1242,8 +1247,14 @@ export default function AdminDashboard() {
                             <td className="p-3">{res.user.name}</td>
                             <td className="p-3 font-bold">€{Number(res.totalPrice).toFixed(2)}</td>
                             <td className="p-3">
-                              <span className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {res.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                res.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                res.attendanceStatus === 'CHECKED_IN' ? 'bg-green-100 text-green-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {res.status === 'CANCELLED' ? 'Cancelada' : 
+                                 res.attendanceStatus === 'CHECKED_IN' ? 'Confirmada' : 
+                                 'Reservada'}
                               </span>
                             </td>
                             <td className="p-3 text-sm text-gray-600 italic max-w-[150px] truncate" title={res.notes || ''}>

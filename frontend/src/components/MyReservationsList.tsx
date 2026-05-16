@@ -11,6 +11,7 @@ interface Reservation {
   startTime: string;
   endTime: string;
   status: string;
+  attendanceStatus: string;
   totalPrice: string;
   notes?: string;
 }
@@ -152,11 +153,14 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
                     {format(new Date(res.startTime), 'p', { locale: es })} - {format(new Date(res.endTime), 'p', { locale: es })}
                   </div>
                 </div>
-                <div className={`px-2 py-1 rounded text-xs font-bold ${res.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                <div className={`px-2 py-1 rounded text-xs font-bold ${
                   res.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                  {res.status === 'CONFIRMED' ? 'CONFIRMADA' : res.status === 'CANCELLED' ? 'CANCELADA' : res.status}
+                  res.attendanceStatus === 'CHECKED_IN' ? 'bg-green-100 text-green-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {res.status === 'CANCELLED' ? 'CANCELADA' : 
+                   res.attendanceStatus === 'CHECKED_IN' ? 'CONFIRMADA' : 
+                   'RESERVADA'}
                 </div>
               </div>
 

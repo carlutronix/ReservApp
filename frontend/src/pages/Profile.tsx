@@ -35,7 +35,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function Profile() {
-    const { user } = useAuth(); // Assuming login updates user state, or we need a reload/fetchUser
+    const { user, updateUser } = useAuth(); // Assuming login updates user state, or we need a reload/fetchUser
     const navigate = useNavigate();
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
@@ -68,7 +68,12 @@ export default function Profile() {
                 updateData.currentPassword = data.currentPassword;
             }
 
-            await api.put(`/users/${user?.id}`, updateData);
+            const response = await api.put(`/users/${user?.id}`, updateData);
+            
+            // Update the user in AuthContext
+            if (response.data) {
+                updateUser(response.data);
+            }
 
             setSuccess('Perfil actualizado correctamente. Redirigiendo...');
             
