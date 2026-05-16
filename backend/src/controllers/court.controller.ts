@@ -8,7 +8,7 @@ const courtSchema = z.object({
   type: z.string(),
   surface: z.string(),
   pricePerHour: z.number(),
-  sport: z.string().default('Pádel'), // Add sport validation
+  sport: z.string().optional(), // Made optional to prevent resetting on partial updates
   isActive: z.boolean().optional(),
   openTime: z.string().optional(),
   closeTime: z.string().optional(),
