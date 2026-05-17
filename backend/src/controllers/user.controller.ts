@@ -136,9 +136,16 @@ export const deleteUser = async (req: Request, res: Response) => {
   // ... existing delete
   try {
     const { id } = req.params;
-    await prisma.user.delete({ where: { id: String(id) } });
+    
+    // Eliminar reservas del usuario antes de eliminar el usuario para evitar errores de clave foránea
+    await prisma.$transaction([
+      prisma.reservation.deleteMany({ where: { userId: String(id) } }),
+      prisma.user.delete({ where: { id: String(id) } })
+    ]);
+    
     res.sendStatus(204);
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor al eliminar usuario' });
   }
 };

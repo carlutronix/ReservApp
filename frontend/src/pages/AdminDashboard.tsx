@@ -107,6 +107,7 @@ export default function AdminDashboard() {
   const [allReservations, setAllReservations] = useState<any[]>([]);
   const [resFilterSport, setResFilterSport] = useState<string>('');
   const [resFilterDate, setResFilterDate] = useState<string>('');
+  const [resSortBy, setResSortBy] = useState<string>('date-desc');
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [courts, setCourts] = useState<Court[]>([]);
@@ -1213,6 +1214,16 @@ export default function AdminDashboard() {
                       <option value="Squash">Squash</option>
                       <option value="Tenis de Mesa">Tenis de Mesa</option>
                     </select>
+                    <select
+                      value={resSortBy}
+                      onChange={e => setResSortBy(e.target.value)}
+                      className="border-gray-300 rounded-md text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+                    >
+                      <option value="date-desc">Fecha (más reciente)</option>
+                      <option value="date-asc">Fecha (más antigua)</option>
+                      <option value="sport-asc">Deporte (A-Z)</option>
+                      <option value="sport-desc">Deporte (Z-A)</option>
+                    </select>
                   </div>
                 </div>
 
@@ -1231,9 +1242,16 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {allReservations
+                      {[...allReservations]
                         .filter(r => !resFilterSport || r.court.sport === resFilterSport)
                         .filter(r => !resFilterDate || r.startTime.startsWith(resFilterDate))
+                        .sort((a, b) => {
+                          if (resSortBy === 'date-asc') return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+                          if (resSortBy === 'date-desc') return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                          if (resSortBy === 'sport-asc') return a.court.sport.localeCompare(b.court.sport);
+                          if (resSortBy === 'sport-desc') return b.court.sport.localeCompare(a.court.sport);
+                          return 0;
+                        })
                         .map((res: any) => (
                           <tr key={res.id} className="border-b hover:bg-gray-50">
                             <td className="p-3 text-xs text-gray-500">{res.id.slice(-6)}</td>

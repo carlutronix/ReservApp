@@ -141,8 +141,13 @@ export const createReservation = async (req: AuthRequest, res: Response) => {
       }
 
       // Validar franja horaria de la pista
-      const startHourStr: string = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`;
-      const endHourStr: string = `${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
+      const formatter = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
+      let startHourStr: string = formatter.format(start);
+      let endHourStr: string = formatter.format(end);
+      
+      // Asegurarse de que el formato sea HH:mm (por si acaso Intl devuelve H:mm)
+      startHourStr = startHourStr.replace(/^(\d):/, '0$1:');
+      endHourStr = endHourStr.replace(/^(\d):/, '0$1:');
 
       if (court.openTime && court.closeTime && (startHourStr < court.openTime || endHourStr > court.closeTime)) {
       throw new Error(`El horario de esta pista es de ${court.openTime} a ${court.closeTime}`);
