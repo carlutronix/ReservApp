@@ -510,7 +510,6 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
         courtId: String(courtId),
         userId: String(userId),
         status: 'CONFIRMED',
-        attendanceStatus: 'PENDING', // Importante: solo buscar reservas pendientes de check-in
         endTime: {
           gt: now
         }
