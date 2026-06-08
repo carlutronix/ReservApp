@@ -23,7 +23,12 @@ export default function Layout() {
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 -ml-2 hover:bg-slate-700 rounded-lg transition-colors">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-        <h1 className="text-xl font-bold">ReservApp</h1>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
+          <span className="text-xl font-bold tracking-tight text-white">
+            Reserv<span className="text-indigo-400">App</span>
+          </span>
+        </div>
       </div>
 
       {/* Sidebar background overlay on mobile */}
@@ -41,7 +46,12 @@ export default function Layout() {
         md:translate-x-0 transition-transform duration-300 ease-in-out
         w-64 bg-slate-800 text-white p-6 shadow-2xl md:shadow-none flex flex-col h-full md:h-screen
       `}>
-        <h1 className="text-2xl font-bold mb-8 hidden md:block">ReservApp</h1>
+        <div className="flex items-center gap-2.5 mb-8 hidden md:flex">
+          <div className="w-3.5 h-3.5 rounded-full bg-indigo-500 shrink-0" />
+          <span className="text-2xl font-bold tracking-tight text-white">
+            Reserv<span className="text-indigo-400">App</span>
+          </span>
+        </div>
 
         <nav className="space-y-4 flex-1">
           <Link to="/dashboard" onClick={handleLinkClick} className={`flex items-center space-x-2 p-2 rounded transition-colors font-medium ${location.pathname === '/dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>
