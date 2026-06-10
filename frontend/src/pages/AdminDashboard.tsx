@@ -1400,13 +1400,25 @@ export default function AdminDashboard() {
                   <h3 className="text-xl font-bold mb-2">QR de Check-in</h3>
                   <p className="text-gray-600 mb-6 font-medium text-center">{qrCourt.name}</p>
                   
-                  <div className="bg-white p-4 border-2 border-gray-100 rounded-xl shadow-sm mb-6" id={`qr-court-${qrCourt.id}`}>
+                  <div className="bg-white p-4 border-2 border-gray-100 rounded-xl shadow-sm mb-4" id={`qr-court-${qrCourt.id}`}>
                     <QRCodeSVG 
                       value={`${window.location.origin}/check-in/court/${qrCourt.id}`}
                       size={200}
                       level={"H"}
                       includeMargin={true}
                     />
+                  </div>
+
+                  <div className="w-full mb-6 text-center px-4">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Enlace del QR:</p>
+                    <a 
+                      href={`${window.location.origin}/check-in/court/${qrCourt.id}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-indigo-600 hover:text-indigo-800 break-all font-mono hover:underline"
+                    >
+                      {`${window.location.origin}/check-in/court/${qrCourt.id}`}
+                    </a>
                   </div>
                   
                   <p className="text-xs text-gray-500 text-center mb-6 px-4">
