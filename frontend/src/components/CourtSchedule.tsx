@@ -238,7 +238,7 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
 
                         if (!court.isActive) {
                           bgClass = 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80';
-                          statusTitle = 'Pista Bloqueada';
+                          statusTitle = 'Bloqueada por mantenimiento';
                         } else if (isOob) {
                           bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center';
                           statusTitle = 'Pista Cerrada';

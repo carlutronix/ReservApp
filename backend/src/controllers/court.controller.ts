@@ -23,7 +23,10 @@ export const getCourts = async (req: Request, res: Response) => {
     const where = sport ? { sport: String(sport) } : {};
 
     const courts = await prisma.court.findMany({
-      where
+      where,
+      orderBy: {
+        name: 'asc'
+      }
     });
     res.json(courts);
   } catch (error) {

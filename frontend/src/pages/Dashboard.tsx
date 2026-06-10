@@ -29,6 +29,14 @@ export default function Dashboard() {
         const res = await api.get('/courts');
         const sports = Array.from(new Set(res.data.map((c: any) => c.sport))) as string[];
         if (sports.length > 0) {
+          // Sort sports: 'Pádel' first, 'Tenis' second, then the rest alphabetically
+          sports.sort((a, b) => {
+            if (a === 'Pádel') return -1;
+            if (b === 'Pádel') return 1;
+            if (a === 'Tenis') return -1;
+            if (b === 'Tenis') return 1;
+            return a.localeCompare(b);
+          });
           setAvailableSports(sports);
           if (!sports.includes(selectedSport)) {
             setSelectedSport(sports[0]); // fallback to first available sport if Pádel is removed

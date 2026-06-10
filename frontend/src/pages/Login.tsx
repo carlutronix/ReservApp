@@ -46,7 +46,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex bg-slate-950 font-sans selection:bg-indigo-500 selection:text-white">
       {/* Left Side - Visual Banner (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden flex-col justify-between p-12">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden flex-col justify-center items-center p-12">
         {/* Decorative gradients */}
         <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950 opacity-90 z-0" />
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] pointer-events-none z-0" />
@@ -55,27 +55,12 @@ export default function Login() {
         {/* Interactive Grid/Pattern lines in background */}
         <div className="absolute inset-0 opacity-[0.02] z-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
 
-        {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="w-3.5 h-3.5 rounded-full bg-indigo-500" />
-          <span className="text-3xl font-extrabold tracking-tight text-white">
+        {/* Large Logo */}
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="w-6 h-6 rounded-full bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.8)]" />
+          <span className="text-6xl font-extrabold tracking-tight text-white select-none">
             Reserv<span className="text-indigo-400">App</span>
           </span>
-        </div>
-
-        {/* Center Text & Visual Card */}
-        <div className="relative z-10 my-auto max-w-md">
-          <h1 className="text-3xl font-extrabold text-white leading-tight mb-4 tracking-tight">
-            Gestión inteligente de tus pistas de juego
-          </h1>
-          <p className="text-slate-400 leading-relaxed text-sm">
-            Accede al sistema para reservar pistas de Pádel, Tenis y otras disciplinas deportivas, consultar la disponibilidad de horarios en tiempo real y coordinar tus partidas.
-          </p>
-        </div>
-
-        {/* Footer text */}
-        <div className="relative z-10 text-xs text-slate-500">
-          &copy; {new Date().getFullYear()} ReservApp. Todos los derechos reservados.
         </div>
       </div>
 

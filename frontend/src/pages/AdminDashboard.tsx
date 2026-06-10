@@ -488,7 +488,7 @@ export default function AdminDashboard() {
             {activeTab === 'stats' && stats && (
               <div className="space-y-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                  <h3 className="text-xl font-bold text-gray-800">Panel Interactivo (Filtrado)</h3>
+                  <h3 className="text-xl font-bold text-gray-800">Panel Interactivo</h3>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
                       value={timeRange}

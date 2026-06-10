@@ -98,9 +98,9 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
     setIsEditModalOpen(true);
   };
 
-  const upcomingReservations = reservations.filter(
-    res => isFuture(new Date(res.startTime)) && res.status !== 'CANCELLED'
-  );
+  const upcomingReservations = reservations
+    .filter(res => isFuture(new Date(res.startTime)) && res.status !== 'CANCELLED')
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
   const historyReservations = reservations.filter(
     res => !isFuture(new Date(res.startTime)) || res.status === 'CANCELLED'
