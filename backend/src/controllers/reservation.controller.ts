@@ -141,13 +141,8 @@ export const createReservation = async (req: AuthRequest, res: Response) => {
       }
 
       // Validar franja horaria de la pista
-      const formatter = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
-      let startHourStr: string = formatter.format(start);
-      let endHourStr: string = formatter.format(end);
-      
-      // Asegurarse de que el formato sea HH:mm (por si acaso Intl devuelve H:mm)
-      startHourStr = startHourStr.replace(/^(\d):/, '0$1:');
-      endHourStr = endHourStr.replace(/^(\d):/, '0$1:');
+      const startHourStr: string = `${start.getHours().toString().padStart(2, '0')}:${start.getMinutes().toString().padStart(2, '0')}`;
+      const endHourStr: string = `${end.getHours().toString().padStart(2, '0')}:${end.getMinutes().toString().padStart(2, '0')}`;
 
       if (court.openTime && court.closeTime && (startHourStr < court.openTime || endHourStr > court.closeTime)) {
       throw new Error(`El horario de esta pista es de ${court.openTime} a ${court.closeTime}`);
@@ -510,6 +505,7 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
         courtId: String(courtId),
         userId: String(userId),
         status: 'CONFIRMED',
+        attendanceStatus: 'PENDING', 
         endTime: {
           gt: now
         }
@@ -560,7 +556,7 @@ export const checkInReservation = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Ya has realizado el check-in para esta reserva.' });
     }
 
-    // 4. Todo OK, actualizamos
+    // 4. Todo OK actualizamos
     const updated = await prisma.reservation.update({
       where: { id: reservation.id },
       data: {

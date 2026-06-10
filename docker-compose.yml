@@ -26,8 +26,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
-      - DIRECT_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
+      - DATABASE_URL=postgresql://neondb_owner:npg_J63zoKUVybuw@ep-plain-glade-alrspqsw-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - JWT_SECRET=reservapp_secret_key_2024
       - NODE_ENV=development
       - TZ=Europe/Madrid
