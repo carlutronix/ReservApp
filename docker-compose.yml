@@ -27,6 +27,7 @@ services:
       - ./backend/.env
     environment:
       - DATABASE_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
+      - DIRECT_URL=postgresql://reservapp_user:reservapp_password@postgres:5432/reservapp_db?schema=public
       - JWT_SECRET=reservapp_secret_key_2024
       - NODE_ENV=development
       - TZ=Europe/Madrid
