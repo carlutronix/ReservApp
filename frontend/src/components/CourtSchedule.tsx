@@ -157,7 +157,7 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
           Horario de Pistas
         </h2>
 
-        <div className="flex items-center bg-slate-100 border border-slate-200/40 p-1 rounded-xl shadow-inner select-none w-full max-w-[280px] mx-auto sm:mx-0 relative">
+        <div className="flex items-center bg-slate-100 border border-slate-200/40 p-1 rounded-xl shadow-inner select-none w-full max-w-[280px] self-center sm:self-auto relative">
           <button
             onClick={() => changeDate(-1)}
             disabled={isSameDay(selectedDate, new Date()) || selectedDate < new Date()}
@@ -391,6 +391,9 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                               {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
                                 <span className="text-[9px] font-bold text-amber-500 tracking-wider uppercase font-semibold">Bloqueo</span>
                               )}
+                              {!isOob && court.isActive && ((firstStatus === 'RESERVED' && secondStatus === 'AVAILABLE') || (firstStatus === 'AVAILABLE' && secondStatus === 'RESERVED')) && (
+                                <span className="text-[9px] font-bold text-indigo-500 tracking-wider uppercase">1/2 Libre</span>
+                              )}
                             </button>
                           );
                         })}
@@ -477,6 +480,9 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                               )}
                               {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
                                 <span className="text-[8px] font-bold text-amber-500 tracking-wider uppercase font-semibold mt-0.5">Bloqueo</span>
+                              )}
+                              {!isOob && court.isActive && ((firstStatus === 'RESERVED' && secondStatus === 'AVAILABLE') || (firstStatus === 'AVAILABLE' && secondStatus === 'RESERVED')) && (
+                                <span className="text-[8px] font-bold text-indigo-500 tracking-wider uppercase mt-0.5">1/2 Libre</span>
                               )}
                               {!isOob && court.isActive && firstStatus === 'AVAILABLE' && secondStatus === 'AVAILABLE' && !isPast && (
                                 <span className="text-[8px] font-semibold text-emerald-600 tracking-wide uppercase mt-0.5">Libre</span>
