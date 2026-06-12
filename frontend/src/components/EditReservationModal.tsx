@@ -81,13 +81,12 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
 
         const fetchAvailability = async () => {
             try {
-                const searchDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
                 const [resReservations, resMaintenances] = await Promise.all([
                     api.get('/reservations', {
-                        params: { date: searchDate.toISOString() }
+                        params: { date: selectedDate }
                     }),
                     api.get('/maintenances', {
-                        params: { date: searchDate.toISOString() }
+                        params: { date: selectedDate }
                     })
                 ]);
                 setBookedReservations(resReservations.data);

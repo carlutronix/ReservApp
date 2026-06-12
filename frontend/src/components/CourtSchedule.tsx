@@ -83,10 +83,10 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
       const [resCourts, resReservations, resMaintenances] = await Promise.all([
         api.get('/courts', { params: { sport } }),
         api.get('/reservations', {
-          params: { date: selectedDate.toISOString() }
+          params: { date: format(selectedDate, 'yyyy-MM-dd') }
         }),
         api.get('/maintenances', {
-          params: { date: selectedDate.toISOString() }
+          params: { date: format(selectedDate, 'yyyy-MM-dd') }
         })
       ]);
       setCourts(resCourts.data);
