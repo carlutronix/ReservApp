@@ -157,11 +157,11 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
           Horario de Pistas
         </h2>
 
-        <div className="flex items-center bg-slate-100 border border-slate-200/40 p-1 rounded-xl shadow-inner select-none self-end sm:self-auto relative">
+        <div className="flex items-center bg-slate-100 border border-slate-200/40 p-1 rounded-xl shadow-inner select-none w-full max-w-[280px] mx-auto sm:mx-0 relative">
           <button
             onClick={() => changeDate(-1)}
             disabled={isSameDay(selectedDate, new Date()) || selectedDate < new Date()}
-            className={`p-2 rounded-lg transition-all duration-200 active:scale-90 ${isSameDay(selectedDate, new Date()) || selectedDate < new Date()
+            className={`p-2 rounded-lg transition-all duration-200 active:scale-90 flex-shrink-0 ${isSameDay(selectedDate, new Date()) || selectedDate < new Date()
               ? 'text-slate-400 cursor-not-allowed'
               : 'hover:bg-white hover:text-indigo-600 hover:shadow-sm text-slate-600'
               }`}
@@ -169,15 +169,15 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
             <ChevronLeft size={16} />
           </button>
 
-          <div className="relative">
+          <div className="flex-1 relative flex justify-center">
             <button
               onClick={handleOpenDatePicker}
-              className="flex items-center gap-2 py-1.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all duration-200"
+              className="flex items-center justify-center gap-2 py-1.5 px-2.5 w-full rounded-lg hover:bg-white hover:shadow-sm transition-all duration-200"
             >
-              <span className="font-bold text-sm w-36 text-center capitalize text-slate-700">
+              <span className="font-bold text-sm text-center capitalize text-slate-700 truncate">
                 {format(selectedDate, 'EEE, d MMM', { locale: es })}
               </span>
-              <CalendarIcon size={14} className="text-slate-400" />
+              <CalendarIcon size={14} className="text-slate-400 flex-shrink-0" />
             </button>
 
             {isDatePickerOpen && (
@@ -189,7 +189,7 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                 />
                 
                 {/* Custom Calendar Dropdown */}
-                <div className="absolute right-0 top-full mt-2 bg-white border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-200/40 p-4.5 z-30 w-[290px] select-none animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-white border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-200/40 p-4.5 z-30 w-[290px] select-none animate-in fade-in slide-in-from-top-2 duration-150">
                   {/* Calendar Header */}
                   <div className="flex justify-between items-center mb-3">
                     <button
@@ -283,7 +283,7 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
 
           <button 
             onClick={() => changeDate(1)} 
-            className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-slate-600 hover:text-indigo-600 hover:shadow-sm active:scale-90 transition-all duration-200"
+            className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-slate-600 hover:text-indigo-600 hover:shadow-sm active:scale-90 transition-all duration-200 flex-shrink-0"
           >
             <ChevronRight size={16} />
           </button>
