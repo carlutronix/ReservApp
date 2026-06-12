@@ -291,13 +291,13 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto flex-1 p-5 pb-6 custom-scrollbar">
+      <div className="flex-1 p-5 pb-6 custom-scrollbar overflow-x-auto md:overflow-x-visible">
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <Loader className="animate-spin text-indigo-600" size={36} />
           </div>
         ) : (
-          <div className="min-w-[850px]">
+          <div>
             {courts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                 <CalendarIcon className="opacity-20 mb-3" size={48} />
@@ -306,93 +306,185 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
               </div>
             ) : (
               <>
-                {/* Header Row (Times) */}
-                <div className="grid gap-1.5 mb-3" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
-                  <div className="font-extrabold text-[11px] tracking-wider uppercase text-slate-400 p-2 flex items-center">Pistas</div>
-                  {timeSlots.map((time, i) => (
-                    <div key={i} className="text-center text-xs font-bold text-slate-500 bg-slate-100/60 border border-slate-200/20 py-2 rounded-lg shadow-sm">
-                      {format(time, 'HH:mm')}
-                    </div>
-                  ))}
+                {/* Desktop Layout (hidden md:block) */}
+                <div className="hidden md:block min-w-[850px]">
+                  {/* Header Row (Times) */}
+                  <div className="grid gap-1.5 mb-3" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
+                    <div className="font-extrabold text-[11px] tracking-wider uppercase text-slate-400 p-2 flex items-center">Pistas</div>
+                    {timeSlots.map((time, i) => (
+                      <div key={i} className="text-center text-xs font-bold text-slate-500 bg-slate-100/60 border border-slate-200/20 py-2 rounded-lg shadow-sm">
+                        {format(time, 'HH:mm')}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Court Rows */}
+                  <div className="space-y-3">
+                    {courts.map(court => (
+                      <div key={court.id} className="grid gap-1.5" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
+                        {/* Court Name Column */}
+                        <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col justify-center shadow-sm">
+                          <span className="font-extrabold text-sm text-slate-800 truncate" title={court.name}>{court.name}</span>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mt-0.5 truncate capitalize">{court.surface || court.type}</span>
+                        </div>
+
+                        {/* Time Slots */}
+                        {timeSlots.map((time, i) => {
+                          const firstHalfStart = time;
+                          const firstHalfEnd = new Date(time.getTime() + 30 * 60000);
+                          const secondHalfStart = firstHalfEnd;
+                          const secondHalfEnd = new Date(time.getTime() + 60 * 60000);
+
+                          const firstStatus = getIntervalStatus(court.id, firstHalfStart, firstHalfEnd);
+                          const secondStatus = getIntervalStatus(court.id, secondHalfStart, secondHalfEnd);
+
+                          const isPast = time < new Date();
+                          const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                          const dayOfWeek = selectedDate.getDay();
+                          const isActiveDay = court.activeDays?.includes(dayOfWeek) ?? true;
+                          const isWithinHours = timeStr >= (court.openTime || '08:00') && timeStr < (court.closeTime || '22:00');
+                          const isOob = !isActiveDay || !isWithinHours;
+
+                          let bgClass = '';
+                          let statusTitle = 'Disponible';
+
+                          if (!court.isActive) {
+                            bgClass = 'bg-slate-200/70 border-slate-300 cursor-not-allowed opacity-80';
+                            statusTitle = 'Bloqueada por mantenimiento';
+                          } else if (isOob) {
+                            bgClass = 'bg-slate-100/40 border-slate-200/10 cursor-not-allowed opacity-60 flex items-center justify-center';
+                            statusTitle = 'Pista Cerrada';
+                          } else if (isPast) {
+                            bgClass = 'bg-slate-100/40 border-slate-200/20 cursor-not-allowed opacity-50';
+                            statusTitle = 'Pasado';
+                          } else {
+                            if (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') {
+                              bgClass = 'bg-amber-50/50 border-amber-200/50 cursor-not-allowed text-amber-700';
+                              statusTitle = 'Mantenimiento / Bloqueo';
+                            } else if (firstStatus === 'RESERVED' && secondStatus === 'RESERVED') {
+                              bgClass = 'bg-rose-50/50 border-rose-200/30 cursor-not-allowed text-rose-700';
+                              statusTitle = 'Reservado';
+                            } else if (firstStatus === 'RESERVED') {
+                              bgClass = 'bg-gradient-to-r from-rose-50/50 from-50% to-emerald-50/45 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
+                            } else if (secondStatus === 'RESERVED') {
+                              bgClass = 'bg-gradient-to-r from-emerald-50/45 from-50% to-rose-50/50 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
+                            } else {
+                              bgClass = 'bg-emerald-50/40 border-emerald-100/70 hover:bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/30 cursor-pointer hover:scale-[1.02]';
+                            }
+                          }
+
+                          const slotToBook = (firstStatus !== 'AVAILABLE' && secondStatus === 'AVAILABLE') ? secondHalfStart : firstHalfStart;
+                          const isFullyBooked = firstStatus !== 'AVAILABLE' && secondStatus !== 'AVAILABLE';
+
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => handleSlotClick(court, slotToBook)}
+                              disabled={isFullyBooked || isPast || !court.isActive || isOob}
+                              className={`w-full h-full min-h-[60px] rounded-xl transition-all duration-200 border flex flex-col items-center justify-center font-bold text-xs ${bgClass}`}
+                              title={statusTitle}
+                            >
+                              {isOob && !(!court.isActive) && <span className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">Cerrado</span>}
+                              {!isOob && court.isActive && firstStatus === 'RESERVED' && secondStatus === 'RESERVED' && (
+                                <span className="text-[9px] font-bold text-rose-500 tracking-wider uppercase">Ocupado</span>
+                              )}
+                              {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
+                                <span className="text-[9px] font-bold text-amber-500 tracking-wider uppercase font-semibold">Bloqueo</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Court Rows */}
-                <div className="space-y-3">
+                {/* Mobile Layout (block md:hidden) - Vertical grid style */}
+                <div className="block md:hidden space-y-6">
                   {courts.map(court => (
-                    <div key={court.id} className="grid gap-1.5" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
-                      {/* Court Name Column */}
-                      <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col justify-center shadow-sm">
-                        <span className="font-extrabold text-sm text-slate-800 truncate" title={court.name}>{court.name}</span>
-                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mt-0.5 truncate capitalize">{court.surface || court.type}</span>
+                    <div key={court.id} className="bg-slate-50/40 border border-slate-200/50 rounded-2xl p-4 shadow-sm">
+                      {/* Court title */}
+                      <div className="flex justify-between items-center pb-3.5 border-b border-slate-200/40">
+                        <span className="font-extrabold text-sm text-slate-800">{court.name}</span>
+                        <span className="text-[9px] uppercase tracking-wider font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/40 capitalize">
+                          {court.surface || court.type}
+                        </span>
                       </div>
 
-                      {/* Time Slots */}
-                      {timeSlots.map((time, i) => {
-                        const firstHalfStart = time;
-                        const firstHalfEnd = new Date(time.getTime() + 30 * 60000);
-                        const secondHalfStart = firstHalfEnd;
-                        const secondHalfEnd = new Date(time.getTime() + 60 * 60000);
+                      {/* Hour grid */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-4">
+                        {timeSlots.map((time, i) => {
+                          const firstHalfStart = time;
+                          const firstHalfEnd = new Date(time.getTime() + 30 * 60000);
+                          const secondHalfStart = firstHalfEnd;
+                          const secondHalfEnd = new Date(time.getTime() + 60 * 60000);
 
-                        const firstStatus = getIntervalStatus(court.id, firstHalfStart, firstHalfEnd);
-                        const secondStatus = getIntervalStatus(court.id, secondHalfStart, secondHalfEnd);
+                          const firstStatus = getIntervalStatus(court.id, firstHalfStart, firstHalfEnd);
+                          const secondStatus = getIntervalStatus(court.id, secondHalfStart, secondHalfEnd);
 
-                        const isPast = time < new Date();
-                        const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
-                        const dayOfWeek = selectedDate.getDay();
-                        const isActiveDay = court.activeDays?.includes(dayOfWeek) ?? true;
-                        const isWithinHours = timeStr >= (court.openTime || '08:00') && timeStr < (court.closeTime || '22:00');
-                        const isOob = !isActiveDay || !isWithinHours;
+                          const isPast = time < new Date();
+                          const timeStr = `${time.getHours().toString().padStart(2, '0')}:${time.getMinutes().toString().padStart(2, '0')}`;
+                          const dayOfWeek = selectedDate.getDay();
+                          const isActiveDay = court.activeDays?.includes(dayOfWeek) ?? true;
+                          const isWithinHours = timeStr >= (court.openTime || '08:00') && timeStr < (court.closeTime || '22:00');
+                          const isOob = !isActiveDay || !isWithinHours;
 
-                        let bgClass = '';
-                        let statusTitle = 'Disponible';
+                          let bgClass = '';
+                          let statusTitle = 'Disponible';
 
-                        if (!court.isActive) {
-                          bgClass = 'bg-slate-200/70 border-slate-300 cursor-not-allowed opacity-80';
-                          statusTitle = 'Bloqueada por mantenimiento';
-                        } else if (isOob) {
-                          bgClass = 'bg-slate-100/40 border-slate-200/10 cursor-not-allowed opacity-60 flex items-center justify-center';
-                          statusTitle = 'Pista Cerrada';
-                        } else if (isPast) {
-                          bgClass = 'bg-slate-100/40 border-slate-200/20 cursor-not-allowed opacity-50';
-                          statusTitle = 'Pasado';
-                        } else {
-                          // Complex status based on both halves
-                          if (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') {
-                            bgClass = 'bg-amber-50/50 border-amber-200/50 cursor-not-allowed text-amber-700';
-                            statusTitle = 'Mantenimiento / Bloqueo';
-                          } else if (firstStatus === 'RESERVED' && secondStatus === 'RESERVED') {
-                            bgClass = 'bg-rose-50/50 border-rose-200/30 cursor-not-allowed text-rose-700';
-                            statusTitle = 'Reservado';
-                          } else if (firstStatus === 'RESERVED') {
-                            bgClass = 'bg-gradient-to-r from-rose-50/50 from-50% to-emerald-50/45 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
-                          } else if (secondStatus === 'RESERVED') {
-                            bgClass = 'bg-gradient-to-r from-emerald-50/45 from-50% to-rose-50/50 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
+                          if (!court.isActive) {
+                            bgClass = 'bg-slate-200/70 border-slate-300 cursor-not-allowed opacity-80';
+                            statusTitle = 'Bloqueada por mantenimiento';
+                          } else if (isOob) {
+                            bgClass = 'bg-slate-100/40 border-slate-200/10 cursor-not-allowed opacity-60 flex items-center justify-center';
+                            statusTitle = 'Pista Cerrada';
+                          } else if (isPast) {
+                            bgClass = 'bg-slate-100/40 border-slate-200/20 cursor-not-allowed opacity-50';
+                            statusTitle = 'Pasado';
                           } else {
-                            bgClass = 'bg-emerald-50/40 border-emerald-100/70 hover:bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/30 cursor-pointer hover:scale-[1.02]';
+                            if (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') {
+                              bgClass = 'bg-amber-50/50 border-amber-200/50 cursor-not-allowed text-amber-700';
+                              statusTitle = 'Mantenimiento / Bloqueo';
+                            } else if (firstStatus === 'RESERVED' && secondStatus === 'RESERVED') {
+                              bgClass = 'bg-rose-50/50 border-rose-200/30 cursor-not-allowed text-rose-700';
+                              statusTitle = 'Reservado';
+                            } else if (firstStatus === 'RESERVED') {
+                              bgClass = 'bg-gradient-to-r from-rose-50/50 from-50% to-emerald-50/45 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer active:scale-95';
+                            } else if (secondStatus === 'RESERVED') {
+                              bgClass = 'bg-gradient-to-r from-emerald-50/45 from-50% to-rose-50/50 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer active:scale-95';
+                            } else {
+                              bgClass = 'bg-emerald-50/40 border-emerald-100/70 hover:bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/30 cursor-pointer active:scale-95';
+                            }
                           }
-                        }
 
-                        const slotToBook = (firstStatus !== 'AVAILABLE' && secondStatus === 'AVAILABLE') ? secondHalfStart : firstHalfStart;
-                        const isFullyBooked = firstStatus !== 'AVAILABLE' && secondStatus !== 'AVAILABLE';
+                          const slotToBook = (firstStatus !== 'AVAILABLE' && secondStatus === 'AVAILABLE') ? secondHalfStart : firstHalfStart;
+                          const isFullyBooked = firstStatus !== 'AVAILABLE' && secondStatus !== 'AVAILABLE';
 
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => handleSlotClick(court, slotToBook)}
-                            disabled={isFullyBooked || isPast || !court.isActive || isOob}
-                            className={`w-full h-full min-h-[60px] rounded-xl transition-all duration-200 border flex flex-col items-center justify-center font-bold text-xs ${bgClass}`}
-                            title={statusTitle}
-                          >
-                            {isOob && !(!court.isActive) && <span className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">Cerrado</span>}
-                            {!isOob && court.isActive && firstStatus === 'RESERVED' && secondStatus === 'RESERVED' && (
-                              <span className="text-[9px] font-bold text-rose-500 tracking-wider uppercase">Ocupado</span>
-                            )}
-                            {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
-                              <span className="text-[9px] font-bold text-amber-500 tracking-wider uppercase font-semibold">Bloqueo</span>
-                            )}
-                          </button>
-                        );
-                      })}
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => handleSlotClick(court, slotToBook)}
+                              disabled={isFullyBooked || isPast || !court.isActive || isOob}
+                              className={`w-full py-2.5 rounded-xl transition-all duration-200 border flex flex-col items-center justify-center font-bold text-xs ${bgClass}`}
+                              title={statusTitle}
+                            >
+                              <span className="text-xs font-extrabold">{format(time, 'HH:mm')}</span>
+                              {isOob && !(!court.isActive) && (
+                                <span className="text-[8px] text-slate-400 font-semibold tracking-wide uppercase mt-0.5">Cerrado</span>
+                              )}
+                              {!isOob && court.isActive && firstStatus === 'RESERVED' && secondStatus === 'RESERVED' && (
+                                <span className="text-[8px] font-bold text-rose-500 tracking-wider uppercase mt-0.5">Ocupado</span>
+                              )}
+                              {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
+                                <span className="text-[8px] font-bold text-amber-500 tracking-wider uppercase font-semibold mt-0.5">Bloqueo</span>
+                              )}
+                              {!isOob && court.isActive && firstStatus === 'AVAILABLE' && secondStatus === 'AVAILABLE' && !isPast && (
+                                <span className="text-[8px] font-semibold text-emerald-600 tracking-wide uppercase mt-0.5">Libre</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
                 </div>
