@@ -391,9 +391,6 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                               {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
                                 <span className="text-[9px] font-bold text-amber-500 tracking-wider uppercase font-semibold">Bloqueo</span>
                               )}
-                              {!isOob && court.isActive && ((firstStatus === 'RESERVED' && secondStatus === 'AVAILABLE') || (firstStatus === 'AVAILABLE' && secondStatus === 'RESERVED')) && (
-                                <span className="text-[9px] font-bold text-indigo-500 tracking-wider uppercase">1/2 Libre</span>
-                              )}
                             </button>
                           );
                         })}
@@ -480,9 +477,6 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                               )}
                               {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
                                 <span className="text-[8px] font-bold text-amber-500 tracking-wider uppercase font-semibold mt-0.5">Bloqueo</span>
-                              )}
-                              {!isOob && court.isActive && ((firstStatus === 'RESERVED' && secondStatus === 'AVAILABLE') || (firstStatus === 'AVAILABLE' && secondStatus === 'RESERVED')) && (
-                                <span className="text-[8px] font-bold text-indigo-500 tracking-wider uppercase mt-0.5">1/2 Libre</span>
                               )}
                               {!isOob && court.isActive && firstStatus === 'AVAILABLE' && secondStatus === 'AVAILABLE' && !isPast && (
                                 <span className="text-[8px] font-semibold text-emerald-600 tracking-wide uppercase mt-0.5">Libre</span>

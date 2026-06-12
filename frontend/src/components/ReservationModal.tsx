@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +36,17 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const { register, handleSubmit, watch } = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
     defaultValues: {
@@ -69,17 +81,17 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/15 backdrop-blur-[1px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/50 w-full max-w-md overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50">
+  return createPortal(
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/50 w-full max-w-md max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
           <h3 className="text-lg font-bold text-slate-800">Confirmar Reserva</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-lg transition-colors">
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 overflow-y-auto flex-1">
           {error && (
             <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-xs font-semibold border border-red-100/60">
               {error}
@@ -95,7 +107,7 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
               {format(startTime, 'PPPP', { locale: es })} a las {format(startTime, 'p', { locale: es })}
             </p>
             {court.pricePerHour > 0 && (
-              <div className="inline-flex bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md mt-3 shadow-md shadow-indigo-600/10">
+              <div className="inline-flex bg-indigo-50 text-indigo-600 border border-indigo-100/80 text-[10px] font-bold px-2.5 py-0.5 rounded-lg mt-3">
                 €{court.pricePerHour}/hora
               </div>
             )}
@@ -168,6 +180,7 @@ export default function ReservationModal({ isOpen, onClose, court, startTime, on
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

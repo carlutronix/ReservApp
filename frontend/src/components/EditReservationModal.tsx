@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,6 +60,17 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
             setError('');
         }
     }, [reservation, isOpen, reset]);
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
 
     const durationStr = watch('duration');
     const selectedDate = watch('date');
@@ -180,50 +192,52 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-                <div className="flex justify-between items-center p-4 border-b bg-gray-50">
-                    <h3 className="text-lg font-semibold text-gray-800">Editar Reserva</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                        <X size={20} />
+    return createPortal(
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/50 w-full max-w-md max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+                <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                    <h3 className="text-lg font-bold text-slate-800">Editar Reserva</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                        <X size={18} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 overflow-y-auto flex-1">
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-100">
+                        <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-xs font-semibold border border-red-100/60">
                             {error}
                         </div>
                     )}
 
-                    <div className="bg-blue-50 p-3 rounded border border-blue-100 mb-4">
-                        <p className="font-semibold text-blue-900">{reservation.court.name}</p>
+                    <div className="bg-gradient-to-r from-indigo-50/70 to-blue-50/70 p-4 rounded-xl border border-indigo-100/55 mb-4 shadow-sm">
+                        <p className="font-extrabold text-indigo-900 text-base">{reservation.court.name}</p>
                         {reservation.court.pricePerHour !== undefined && reservation.court.pricePerHour > 0 && (
-                            <p className="text-xs font-bold text-blue-800 mt-1">Precio: €{reservation.court.pricePerHour}/hora</p>
+                            <div className="inline-flex bg-indigo-50 text-indigo-600 border border-indigo-100/80 text-[10px] font-bold px-2.5 py-0.5 rounded-lg mt-2">
+                                Precio: €{reservation.court.pricePerHour}/hora
+                            </div>
                         )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                                <Calendar size={16} /> Fecha
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
+                                <Calendar size={14} className="text-slate-400" /> Fecha
                             </label>
                             <input
                                 type="date"
                                 {...register('date')}
-                                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                             />
                             {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                                <Clock size={16} /> Hora Inicio
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
+                                <Clock size={14} className="text-slate-400" /> Hora Inicio
                             </label>
                             <select
                                 {...register('time')}
-                                className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                             >
                                 {Array.from({ length: 29 }, (_, i) => {
                                     const hour = 8 + Math.floor(i / 2);
@@ -249,47 +263,47 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                            <Clock size={16} /> Duración
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
+                            <Clock size={14} className="text-slate-400" /> Duración
                         </label>
                         <select
                             {...register('duration')}
-                            className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
                         >
                             <option value="0.5">30 Minutos</option>
                             <option value="1">1 Hora</option>
                             <option value="1.5">1.5 Horas</option>
                             <option value="2">2 Horas</option>
                         </select>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Hora de fin estimada: {newEndTimeStr} {reservation.court.pricePerHour && reservation.court.pricePerHour > 0 ? <span> • <strong>Total aprox: €{price.toFixed(2)}</strong></span> : ''}
+                        <p className="text-xs text-slate-400 mt-2 font-medium">
+                            Hora de fin estimada: <span className="text-slate-700 font-bold">{newEndTimeStr}</span> {reservation.court.pricePerHour && reservation.court.pricePerHour > 0 ? <span> • <strong className="text-indigo-600 font-extrabold bg-indigo-50/50 px-1.5 py-0.5 rounded">Total aprox: €{price.toFixed(2)}</strong></span> : ''}
                         </p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                            <AlignLeft size={16} /> Notas (Opcional)
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1">
+                            <AlignLeft size={14} className="text-slate-400" /> Notas (Opcional)
                         </label>
                         <textarea
                             {...register('notes')}
-                            className="w-full border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                            rows={3}
+                            className="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-700 text-sm font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-slate-400"
+                            rows={2}
                             placeholder="¿Alguna petición especial?"
                         />
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-3 pt-3">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+                            className="flex-1 px-4 py-2.5 border border-slate-200 hover:border-slate-350 rounded-xl text-slate-700 hover:bg-slate-50 text-sm font-bold transition-all active:scale-[0.98] cursor-pointer"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50 flex justify-center items-center"
+                            className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 disabled:opacity-50 flex justify-center items-center text-sm font-bold shadow-lg shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all active:scale-[0.98] cursor-pointer"
                         >
                             {isSubmitting ? (
                                 <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -300,6 +314,7 @@ export default function EditReservationModal({ isOpen, onClose, reservation, onS
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
