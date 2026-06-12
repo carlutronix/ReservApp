@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -23,6 +23,15 @@ export default function Login() {
   const location = useLocation();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    document.body.style.backgroundColor = '#020617';
+    document.documentElement.style.backgroundColor = '#020617';
+    return () => {
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
 
   const onSubmit = async (data: LoginFormData) => {
     try {

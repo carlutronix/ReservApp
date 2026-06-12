@@ -48,49 +48,58 @@ export default function Layout() {
         md:translate-x-0 transition-transform duration-300 ease-in-out
         w-64 bg-slate-900 text-white p-6 border-r border-slate-850 shadow-2xl md:shadow-none flex flex-col h-full md:h-screen
       `}>
-        <div className="flex items-center gap-2.5 mb-8 hidden md:flex">
-          <div className="w-3.5 h-3.5 rounded-full bg-indigo-500 shrink-0" />
-          <span className="text-2xl font-bold tracking-tight text-white select-none">
-            Reserv<span className="text-indigo-400">App</span>
-          </span>
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800/60 md:border-b-0 md:pb-0 md:mb-8">
+          <div className="flex items-center gap-2.5">
+            <div className="w-3.5 h-3.5 rounded-full bg-indigo-500 shrink-0" />
+            <span className="text-2xl font-bold tracking-tight text-white select-none">
+              Reserv<span className="text-indigo-400">App</span>
+            </span>
+          </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="md:hidden p-2 -mr-2 hover:bg-slate-800 rounded-xl transition-colors text-slate-400 hover:text-white"
+            title="Cerrar menú"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className="space-y-1.5 flex-1">
+        <nav className="space-y-2 flex-1">
           <Link 
             to="/dashboard" 
             onClick={handleLinkClick} 
-            className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm group ${
+            className={`flex items-center space-x-3.5 px-5 py-3.5 rounded-xl transition-colors font-semibold text-base group ${
               location.pathname === '/dashboard' 
                 ? 'bg-slate-800 text-indigo-400' 
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
             }`}
           >
-            <Home size={18} />
+            <Home size={20} />
             <span>Inicio</span>
           </Link>
           <Link 
             to="/reservations" 
             onClick={handleLinkClick} 
-            className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm group ${
+            className={`flex items-center space-x-3.5 px-5 py-3.5 rounded-xl transition-colors font-semibold text-base group ${
               location.pathname === '/reservations' 
                 ? 'bg-slate-800 text-indigo-400' 
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
             }`}
           >
-            <Calendar size={18} />
+            <Calendar size={20} />
             <span>Mis Reservas</span>
           </Link>
           {user?.role === 'ADMIN' && (
             <Link 
               to="/admin" 
               onClick={handleLinkClick} 
-              className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-semibold text-sm group ${
+              className={`flex items-center space-x-3.5 px-5 py-3.5 rounded-xl transition-colors font-semibold text-base group ${
                 location.pathname === '/admin' 
                   ? 'bg-slate-800 text-amber-500' 
                   : 'text-amber-500/80 hover:text-amber-400 hover:bg-slate-800/40'
               }`}
             >
-              <User size={18} />
+              <User size={20} />
               <span>Panel de Admin</span>
             </Link>
           )}

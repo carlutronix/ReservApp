@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import { Lock, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
@@ -7,6 +7,15 @@ export default function ResetPassword() {
   const { token } = useParams<{ token: string }>();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    document.body.style.backgroundColor = '#020617';
+    document.documentElement.style.backgroundColor = '#020617';
+    return () => {
+      document.body.style.backgroundColor = '';
+      document.documentElement.style.backgroundColor = '';
+    };
+  }, []);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
