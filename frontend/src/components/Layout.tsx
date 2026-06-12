@@ -17,24 +17,26 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative selection:bg-indigo-500 selection:text-white">
       {/* Mobile Top Nav */}
-      <div className="md:hidden bg-slate-800 text-white p-4 flex items-center sticky top-0 z-20 shadow-md gap-3">
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 -ml-2 hover:bg-slate-700 rounded-lg transition-colors">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
-          <span className="text-xl font-bold tracking-tight text-white">
-            Reserv<span className="text-indigo-400">App</span>
-          </span>
+      <div className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-20 shadow-md border-b border-slate-800 gap-3">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 -ml-2 hover:bg-slate-800 rounded-xl transition-colors">
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0" />
+            <span className="text-xl font-bold tracking-tight text-white select-none">
+              Reserv<span className="text-indigo-400">App</span>
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Sidebar background overlay on mobile */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden transition-all duration-300"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -44,40 +46,68 @@ export default function Layout() {
         fixed md:sticky md:top-0 inset-y-0 left-0 z-40 transform 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
         md:translate-x-0 transition-transform duration-300 ease-in-out
-        w-64 bg-slate-800 text-white p-6 shadow-2xl md:shadow-none flex flex-col h-full md:h-screen
+        w-64 bg-slate-900 text-white p-6 border-r border-slate-850 shadow-2xl md:shadow-none flex flex-col h-full md:h-screen
       `}>
         <div className="flex items-center gap-2.5 mb-8 hidden md:flex">
           <div className="w-3.5 h-3.5 rounded-full bg-indigo-500 shrink-0" />
-          <span className="text-2xl font-bold tracking-tight text-white">
+          <span className="text-2xl font-bold tracking-tight text-white select-none">
             Reserv<span className="text-indigo-400">App</span>
           </span>
         </div>
 
-        <nav className="space-y-4 flex-1">
-          <Link to="/dashboard" onClick={handleLinkClick} className={`flex items-center space-x-2 p-2 rounded transition-colors font-medium ${location.pathname === '/dashboard' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>
-            <Home size={20} />
+        <nav className="space-y-1.5 flex-1">
+          <Link 
+            to="/dashboard" 
+            onClick={handleLinkClick} 
+            className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm group ${
+              location.pathname === '/dashboard' 
+                ? 'bg-slate-800 text-indigo-400' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+            }`}
+          >
+            <Home size={18} />
             <span>Inicio</span>
           </Link>
-          <Link to="/reservations" onClick={handleLinkClick} className={`flex items-center space-x-2 p-2 rounded transition-colors font-medium ${location.pathname === '/reservations' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>
-            <Calendar size={20} />
+          <Link 
+            to="/reservations" 
+            onClick={handleLinkClick} 
+            className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-medium text-sm group ${
+              location.pathname === '/reservations' 
+                ? 'bg-slate-800 text-indigo-400' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+            }`}
+          >
+            <Calendar size={18} />
             <span>Mis Reservas</span>
           </Link>
           {user?.role === 'ADMIN' && (
-            <Link to="/admin" onClick={handleLinkClick} className={`flex items-center space-x-2 p-2 rounded transition-colors font-medium text-yellow-500 ${location.pathname === '/admin' ? 'bg-slate-700' : 'hover:bg-slate-700'}`}>
-              <User size={20} />
+            <Link 
+              to="/admin" 
+              onClick={handleLinkClick} 
+              className={`flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-colors font-semibold text-sm group ${
+                location.pathname === '/admin' 
+                  ? 'bg-slate-800 text-amber-500' 
+                  : 'text-amber-500/80 hover:text-amber-400 hover:bg-slate-800/40'
+              }`}
+            >
+              <User size={18} />
               <span>Panel de Admin</span>
             </Link>
           )}
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-slate-700 flex flex-col gap-4">
-          <Link to="/profile" onClick={handleLinkClick} className="flex items-center space-x-3 hover:bg-slate-700 p-2 rounded transition-colors group cursor-pointer">
-            <div className="bg-slate-700 p-2 rounded-full group-hover:bg-slate-600 transition-colors shrink-0">
-              <User size={20} className="text-slate-300" />
+        <div className="mt-auto pt-4 border-t border-slate-800 flex flex-col gap-4">
+          <Link 
+            to="/profile" 
+            onClick={handleLinkClick} 
+            className="flex items-center space-x-3 bg-slate-950/20 hover:bg-slate-800/50 border border-slate-800 p-3 rounded-xl transition-colors group cursor-pointer"
+          >
+            <div className="bg-slate-800 text-slate-200 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 border border-slate-700">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium truncate w-full" title={user?.name}>{user?.name}</p>
-              <p className="text-xs text-slate-400">Ver Perfil</p>
+            <div className="overflow-hidden flex-1">
+              <p className="text-sm font-semibold truncate w-full text-slate-200" title={user?.name}>{user?.name}</p>
+              <p className="text-xs text-slate-400">Mi Perfil</p>
             </div>
           </Link>
 
@@ -86,9 +116,9 @@ export default function Layout() {
               handleLinkClick();
               logout();
             }}
-            className="flex items-center justify-center space-x-2 p-3 mt-2 hover:bg-red-600 rounded-lg bg-red-500 transition-colors text-sm font-bold shadow-md w-full"
+            className="flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/20 active:scale-[0.98] transition-all text-sm font-bold shadow-sm w-full cursor-pointer"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             <span>Cerrar Sesión</span>
           </button>
         </div>

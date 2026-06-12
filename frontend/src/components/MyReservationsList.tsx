@@ -110,21 +110,20 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
 
   if (loading) return <div className="text-center p-4">Cargando reservas...</div>;
 
-  return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
-      <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-800">Mis Reservas</h2>
-        <div className="flex space-x-2 bg-gray-200 p-1 rounded-lg">
+  return (    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-xl shadow-slate-100/45 overflow-hidden h-full flex flex-col">
+      <div className="p-5 border-b border-slate-200/80 bg-slate-50/45 flex justify-between items-center">
+        <h2 className="text-lg font-bold text-slate-800">Mis Reservas</h2>
+        <div className="flex space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200/30">
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === 'upcoming' ? 'bg-white shadow text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-800'
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${activeTab === 'upcoming' ? 'bg-white shadow text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`}
           >
             Próximas
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === 'history' ? 'bg-white shadow text-indigo-600 font-medium' : 'text-gray-600 hover:text-gray-800'
+            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${activeTab === 'history' ? 'bg-white shadow text-indigo-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`}
           >
             Historial
@@ -132,73 +131,78 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
         </div>
       </div>
 
-      <div className="overflow-y-auto flex-1 p-4 space-y-4">
+      <div className="overflow-y-auto flex-1 p-5 space-y-4 custom-scrollbar">
         {displayedReservations.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="mx-auto mb-2 opacity-50" size={40} />
-            <p>No hay reservas {activeTab === 'upcoming' ? 'próximas' : 'en el historial'}.</p>
+          <div className="text-center py-10 text-slate-400">
+            <Calendar className="mx-auto mb-3 opacity-20" size={44} />
+            <p className="font-semibold text-sm">No hay reservas {activeTab === 'upcoming' ? 'próximas' : 'en el historial'}.</p>
           </div>
         ) : (
           displayedReservations.map((res) => (
-            <div key={res.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50">
-              <div className="flex justify-between items-start mb-2">
+            <div key={res.id} className="border border-slate-200 rounded-2xl p-5 hover:shadow-lg hover:shadow-slate-100/50 hover:border-slate-350 transition-all duration-200 bg-white">
+              <div className="flex justify-between items-start gap-4">
                 <div>
-                  <h4 className="font-bold text-lg text-gray-800">{res.court.name}</h4>
-                  <div className="flex items-center text-gray-600 text-sm mt-1">
-                    <Calendar size={14} className="mr-1" />
-                    {format(new Date(res.startTime), 'PPP', { locale: es })}
-                  </div>
-                  <div className="flex items-center text-gray-600 text-sm mt-1">
-                    <Clock size={14} className="mr-1" />
-                    {format(new Date(res.startTime), 'p', { locale: es })} - {format(new Date(res.endTime), 'p', { locale: es })}
+                  <h4 className="font-extrabold text-[15px] text-slate-800">{res.court.name}</h4>
+                  <div className="flex flex-col gap-1.5 mt-2.5">
+                    <div className="flex items-center text-slate-500 text-xs font-semibold">
+                      <Calendar size={13} className="mr-1.5 text-slate-400" />
+                      {format(new Date(res.startTime), 'PPP', { locale: es })}
+                    </div>
+                    <div className="flex items-center text-slate-500 text-xs font-semibold">
+                      <Clock size={13} className="mr-1.5 text-slate-400" />
+                      {format(new Date(res.startTime), 'p', { locale: es })} - {format(new Date(res.endTime), 'p', { locale: es })}
+                    </div>
                   </div>
                 </div>
-                <div className={`px-2 py-1 rounded text-xs font-bold ${
-                  res.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                  res.attendanceStatus === 'CHECKED_IN' ? 'bg-green-100 text-green-700' :
-                  'bg-blue-100 text-blue-700'
-                }`}>
-                  {res.status === 'CANCELLED' ? 'CANCELADA' : 
-                   res.attendanceStatus === 'CHECKED_IN' ? 'CONFIRMADA' : 
-                   'RESERVADA'}
+                <div className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider shrink-0 ${res.status === 'CANCELLED'
+                  ? 'bg-red-50 text-red-600 border border-red-100/50'
+                  : res.attendanceStatus === 'CHECKED_IN'
+                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/50'
+                    : 'bg-indigo-50 text-indigo-600 border border-indigo-100/50'
+                  }`}>
+                  {res.status === 'CANCELLED' ? 'CANCELADA' :
+                    res.attendanceStatus === 'CHECKED_IN' ? 'CONFIRMADA' :
+                      'RESERVADA'}
                 </div>
               </div>
 
               {res.notes && (
-                <div className="mt-2 text-sm text-gray-600 bg-white p-2 rounded border border-gray-200">
-                  <span className="font-semibold">Nota:</span> {res.notes}
+                <div className="mt-3 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200/40">
+                  <span className="font-bold text-slate-500 mr-1">Nota:</span> {res.notes}
                 </div>
               )}
 
-              <div className="mt-4 flex justify-between items-center pt-3 border-t border-gray-200">
-                <div className="flex items-center font-semibold text-gray-700">
-                  {Number(res.totalPrice) > 0 && (
-                    <>
-                      <Euro size={16} />
-                      {Number(res.totalPrice).toFixed(2)}
-                    </>
+              <div className="mt-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3.5 border-t border-slate-100">
+                <div className="flex items-center font-extrabold text-[15px] text-slate-750">
+                  {Number(res.totalPrice) > 0 ? (
+                    <div className="flex items-center gap-0.5 bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600 border border-slate-200/30 text-xs">
+                      <Euro size={12} className="text-slate-500" />
+                      <span>{Number(res.totalPrice).toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 border border-emerald-100/50 rounded-lg uppercase tracking-wide">Gratis</span>
                   )}
                 </div>
 
                 {activeTab === 'upcoming' && res.status !== 'CANCELLED' && !isDashboardMode && (
-                  <div className="flex space-x-3">
+                  <div className="flex flex-wrap items-center gap-2.5 self-end sm:self-auto">
                     <button
                       onClick={() => handleEditClick(res)}
-                      className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+                      className="flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/40 border border-slate-200 hover:border-indigo-200 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-95"
                     >
-                      <Edit size={16} className="mr-1" /> Editar
+                      <Edit size={13} className="mr-1 text-slate-400" /> Editar
                     </button>
                     <button
                       onClick={() => handleAddToGoogleCalendar(res)}
-                      className="flex items-center text-gray-600 hover:text-gray-800 border border-gray-300 px-2 py-1 rounded text-sm font-medium transition-colors bg-white hover:bg-gray-50"
+                      className="flex items-center justify-center text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 bg-white hover:bg-slate-50 cursor-pointer active:scale-95"
                     >
-                      <CalendarPlus size={16} className="mr-1" /> Google Calendar
+                      <CalendarPlus size={13} className="mr-1 text-slate-400" /> Calendar
                     </button>
                     <button
                       onClick={() => handleCancel(res.id)}
-                      className="flex items-center text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+                      className="flex items-center justify-center text-red-600 hover:text-white hover:bg-red-500 border border-red-200/40 hover:border-red-500 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer active:scale-95"
                     >
-                      <XCircle size={16} className="mr-1" /> Cancelar
+                      <XCircle size={13} className="mr-1" /> Cancelar
                     </button>
                   </div>
                 )}

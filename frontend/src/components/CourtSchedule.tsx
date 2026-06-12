@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import { format, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, addMonths, subMonths, isToday, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader } from 'lucide-react';
 import api from '../api/client';
@@ -36,6 +36,15 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
   const [courts, setCourts] = useState<Court[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Custom Datepicker State
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const handleOpenDatePicker = () => {
+    setViewDate(selectedDate);
+    setIsDatePickerOpen(true);
+  };
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -138,82 +147,183 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col h-full">
-      {/* Header */}
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-xl shadow-slate-100/40 overflow-hidden flex flex-col h-full">
       {/* Header with Date Picker */}
-      <div className="p-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 gap-4">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-          <CalendarIcon className="text-indigo-600" />
+      <div className="p-5 border-b border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50/40 gap-4">
+        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2.5">
+          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+            <CalendarIcon size={18} />
+          </div>
           Horario de Pistas
         </h2>
 
-        <div className="flex items-center gap-4 relative">
+        <div className="flex items-center bg-slate-100 border border-slate-200/40 p-1 rounded-xl shadow-inner select-none self-end sm:self-auto relative">
           <button
             onClick={() => changeDate(-1)}
             disabled={isSameDay(selectedDate, new Date()) || selectedDate < new Date()}
-            className={`p-1 rounded transition-colors ${isSameDay(selectedDate, new Date()) || selectedDate < new Date()
-              ? 'text-gray-300 cursor-not-allowed'
-              : 'hover:bg-gray-200 text-gray-600'
+            className={`p-2 rounded-lg transition-all duration-200 active:scale-90 ${isSameDay(selectedDate, new Date()) || selectedDate < new Date()
+              ? 'text-slate-400 cursor-not-allowed'
+              : 'hover:bg-white hover:text-indigo-600 hover:shadow-sm text-slate-600'
               }`}
           >
-            <ChevronLeft />
+            <ChevronLeft size={16} />
           </button>
 
-          <div className="relative group cursor-pointer">
-            <input
-              type="date"
-              min={format(new Date(), 'yyyy-MM-dd')}
-              value={format(selectedDate, 'yyyy-MM-dd')}
-              onChange={(e) => setSelectedDate(new Date(e.target.value))}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-            />
-            <div className="flex items-center gap-2 py-1 px-3 rounded hover:bg-gray-200 transition-colors">
-              <span className="font-semibold text-lg w-40 text-center capitalize select-none text-gray-700">
+          <div className="relative">
+            <button
+              onClick={handleOpenDatePicker}
+              className="flex items-center gap-2 py-1.5 px-3 rounded-lg hover:bg-white hover:shadow-sm transition-all duration-200"
+            >
+              <span className="font-bold text-sm w-36 text-center capitalize text-slate-700">
                 {format(selectedDate, 'EEE, d MMM', { locale: es })}
               </span>
-              <CalendarIcon size={16} className="text-gray-400" />
-            </div>
+              <CalendarIcon size={14} className="text-slate-400" />
+            </button>
+
+            {isDatePickerOpen && (
+              <>
+                {/* Backdrop overlay */}
+                <div 
+                  className="fixed inset-0 z-20 cursor-default" 
+                  onClick={() => setIsDatePickerOpen(false)}
+                />
+                
+                {/* Custom Calendar Dropdown */}
+                <div className="absolute right-0 top-full mt-2 bg-white border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-200/40 p-4.5 z-30 w-[290px] select-none animate-in fade-in slide-in-from-top-2 duration-150">
+                  {/* Calendar Header */}
+                  <div className="flex justify-between items-center mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setViewDate(prev => subMonths(prev, 1))}
+                      className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="font-extrabold text-sm text-slate-800 capitalize">
+                      {format(viewDate, 'MMMM yyyy', { locale: es })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setViewDate(prev => addMonths(prev, 1))}
+                      className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+
+                  {/* Weekdays */}
+                  <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 uppercase mb-2">
+                    <span>L</span>
+                    <span>M</span>
+                    <span>X</span>
+                    <span>J</span>
+                    <span>V</span>
+                    <span>S</span>
+                    <span>D</span>
+                  </div>
+
+                  {/* Days grid */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {(() => {
+                      const startMonth = startOfMonth(viewDate);
+                      const endMonth = endOfMonth(viewDate);
+                      const startGrid = startOfWeek(startMonth, { weekStartsOn: 1 });
+                      const endGrid = endOfWeek(endMonth, { weekStartsOn: 1 });
+                      
+                      const days = [];
+                      let currentDay = startGrid;
+                      while (currentDay <= endGrid) {
+                        days.push(currentDay);
+                        currentDay = addDays(currentDay, 1);
+                      }
+
+                      const todayStart = startOfDay(new Date());
+
+                      return days.map((day, idx) => {
+                        const isCurrentMonth = isSameMonth(day, viewDate);
+                        const isSel = isSameDay(day, selectedDate);
+                        const isTod = isToday(day);
+                        const isPast = day < todayStart;
+
+                        let btnClass = 'text-slate-700 hover:bg-slate-100';
+                        if (!isCurrentMonth) {
+                          btnClass = 'text-slate-400 hover:bg-slate-50';
+                        }
+                        if (isPast) {
+                          btnClass = 'text-slate-200 cursor-not-allowed';
+                        }
+                        if (isTod && !isSel) {
+                          btnClass = 'text-indigo-600 font-bold border border-indigo-200 bg-indigo-50/20';
+                        }
+                        if (isSel) {
+                          btnClass = 'bg-indigo-600 text-white font-extrabold shadow-md shadow-indigo-600/15';
+                        }
+
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            disabled={isPast}
+                            onClick={() => {
+                              setSelectedDate(day);
+                              setIsDatePickerOpen(false);
+                            }}
+                            className={`h-8 w-8 text-xs font-semibold rounded-lg flex items-center justify-center transition-all ${btnClass}`}
+                          >
+                            {format(day, 'd')}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
-          <button onClick={() => changeDate(1)} className="p-1 hover:bg-gray-200 rounded text-gray-600 transition-colors">
-            <ChevronRight />
+          <button 
+            onClick={() => changeDate(1)} 
+            className="p-2 hover:bg-white hover:shadow-sm rounded-lg text-slate-600 hover:text-indigo-600 hover:shadow-sm active:scale-90 transition-all duration-200"
+          >
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="overflow-x-auto flex-1 p-4 pb-6 custom-scrollbar">
+      <div className="overflow-x-auto flex-1 p-5 pb-6 custom-scrollbar">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Loader className="animate-spin text-indigo-600" size={40} />
+            <Loader className="animate-spin text-indigo-600" size={36} />
           </div>
         ) : (
-          <div className="min-w-[800px]">
+          <div className="min-w-[850px]">
             {courts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                <p className="text-xl font-semibold">No hay pistas disponibles</p>
-                <p>No se encontraron pistas para este deporte en este momento.</p>
+              <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <CalendarIcon className="opacity-20 mb-3" size={48} />
+                <p className="text-lg font-bold">No hay pistas disponibles</p>
+                <p className="text-sm">No se encontraron pistas para este deporte en este momento.</p>
               </div>
             ) : (
               <>
                 {/* Header Row (Times) */}
-                <div className="grid gap-1 mb-2" style={{ gridTemplateColumns: `120px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
-                  <div className="font-bold text-gray-500 p-2">Pista</div>
+                <div className="grid gap-1.5 mb-3" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
+                  <div className="font-extrabold text-[11px] tracking-wider uppercase text-slate-400 p-2 flex items-center">Pistas</div>
                   {timeSlots.map((time, i) => (
-                    <div key={i} className="text-center text-xs font-semibold text-gray-500 whitespace-nowrap overflow-hidden">
+                    <div key={i} className="text-center text-xs font-bold text-slate-500 bg-slate-100/60 border border-slate-200/20 py-2 rounded-lg shadow-sm">
                       {format(time, 'HH:mm')}
                     </div>
                   ))}
                 </div>
 
                 {/* Court Rows */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {courts.map(court => (
-                    <div key={court.id} className="grid gap-1" style={{ gridTemplateColumns: `120px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
+                    <div key={court.id} className="grid gap-1.5" style={{ gridTemplateColumns: `130px repeat(${timeSlots.length}, minmax(35px, 1fr))` }}>
                       {/* Court Name Column */}
-                      <div className="p-3 bg-gray-100 rounded-l flex flex-col justify-center">
-                        <span className="font-bold text-sm text-gray-800">{court.name}</span>
-                        <span className="text-xs text-gray-500 capitalize">{court.type}</span>
+                      <div className="p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex flex-col justify-center shadow-sm">
+                        <span className="font-extrabold text-sm text-slate-800 truncate" title={court.name}>{court.name}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mt-0.5 truncate capitalize">{court.surface || court.type}</span>
                       </div>
 
                       {/* Time Slots */}
@@ -237,28 +347,28 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                         let statusTitle = 'Disponible';
 
                         if (!court.isActive) {
-                          bgClass = 'bg-gray-300 border-gray-400 cursor-not-allowed opacity-80';
+                          bgClass = 'bg-slate-200/70 border-slate-300 cursor-not-allowed opacity-80';
                           statusTitle = 'Bloqueada por mantenimiento';
                         } else if (isOob) {
-                          bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60 flex items-center justify-center';
+                          bgClass = 'bg-slate-100/40 border-slate-200/10 cursor-not-allowed opacity-60 flex items-center justify-center';
                           statusTitle = 'Pista Cerrada';
                         } else if (isPast) {
-                          bgClass = 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50';
+                          bgClass = 'bg-slate-100/40 border-slate-200/20 cursor-not-allowed opacity-50';
                           statusTitle = 'Pasado';
                         } else {
                           // Complex status based on both halves
                           if (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') {
-                            bgClass = 'bg-yellow-100 border-yellow-200 cursor-not-allowed';
+                            bgClass = 'bg-amber-50/50 border-amber-200/50 cursor-not-allowed text-amber-700';
                             statusTitle = 'Mantenimiento / Bloqueo';
                           } else if (firstStatus === 'RESERVED' && secondStatus === 'RESERVED') {
-                            bgClass = 'bg-red-100 border-red-200 cursor-not-allowed';
+                            bgClass = 'bg-rose-50/50 border-rose-200/30 cursor-not-allowed text-rose-700';
                             statusTitle = 'Reservado';
                           } else if (firstStatus === 'RESERVED') {
-                            bgClass = 'bg-gradient-to-r from-red-100 from-50% to-green-50 to-50% border-green-200 cursor-pointer hover:shadow-sm';
+                            bgClass = 'bg-gradient-to-r from-rose-50/50 from-50% to-emerald-50/45 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
                           } else if (secondStatus === 'RESERVED') {
-                            bgClass = 'bg-gradient-to-r from-green-50 from-50% to-red-100 to-50% border-green-200 cursor-pointer hover:shadow-sm';
+                            bgClass = 'bg-gradient-to-r from-emerald-50/45 from-50% to-rose-50/50 to-50% border-emerald-100 hover:border-emerald-200 hover:shadow-sm cursor-pointer hover:scale-[1.02]';
                           } else {
-                            bgClass = 'bg-green-50 border-green-200 hover:bg-green-100 cursor-pointer hover:shadow-sm';
+                            bgClass = 'bg-emerald-50/40 border-emerald-100/70 hover:bg-emerald-50 text-emerald-800 hover:border-emerald-200 hover:shadow-md hover:shadow-emerald-100/30 cursor-pointer hover:scale-[1.02]';
                           }
                         }
 
@@ -270,10 +380,16 @@ export default function CourtSchedule({ onReservationCreated, sport, refreshTrig
                             key={i}
                             onClick={() => handleSlotClick(court, slotToBook)}
                             disabled={isFullyBooked || isPast || !court.isActive || isOob}
-                            className={`w-full h-full min-h-[64px] rounded transition-all border ${bgClass}`}
+                            className={`w-full h-full min-h-[60px] rounded-xl transition-all duration-200 border flex flex-col items-center justify-center font-bold text-xs ${bgClass}`}
                             title={statusTitle}
                           >
-                            {isOob && !(!court.isActive) && <span className="text-[10px] text-gray-400 font-medium">Cerrado</span>}
+                            {isOob && !(!court.isActive) && <span className="text-[10px] text-slate-400 font-semibold tracking-wide uppercase">Cerrado</span>}
+                            {!isOob && court.isActive && firstStatus === 'RESERVED' && secondStatus === 'RESERVED' && (
+                              <span className="text-[9px] font-bold text-rose-500 tracking-wider uppercase">Ocupado</span>
+                            )}
+                            {!isOob && court.isActive && (firstStatus === 'MAINTENANCE' || secondStatus === 'MAINTENANCE') && (
+                              <span className="text-[9px] font-bold text-amber-500 tracking-wider uppercase font-semibold">Bloqueo</span>
+                            )}
                           </button>
                         );
                       })}
