@@ -63,7 +63,7 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
     }
   };
 
-  const handleAddToGoogleCalendar = (res: Reservation) => {
+  const handleAddToCalendar = (res: Reservation) => {
     try {
       const startDate = new Date(res.startTime);
       const endDate = new Date(res.endTime);
@@ -80,16 +80,35 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
       const startString = formatToUTCString(startDate);
       const endString = formatToUTCString(endDate);
 
-      const title = encodeURIComponent(`Reserva pista - ${res.court.name}`);
-      const details = encodeURIComponent(`Reserva creada en ReservApp.${res.notes ? '\\nNotas: ' + res.notes : ''}`);
-      const location = encodeURIComponent(res.court.name);
+      const title = `Reserva pista - ${res.court.name}`;
+      const details = `Reserva creada en ReservApp.${res.notes ? '\\nNotas: ' + res.notes : ''}`;
+      const location = res.court.name;
 
-      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startString}/${endString}&details=${details}&location=${location}`;
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//ReservApp//ES',
+        'BEGIN:VEVENT',
+        `DTSTART:${startString}`,
+        `DTEND:${endString}`,
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${details}`,
+        `LOCATION:${location}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
 
-      window.open(googleCalendarUrl, '_blank');
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', `reserva-${res.court.name.replace(/\s+/g, '-')}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
     } catch (error) {
-      console.error('Error opening Google Calendar', error);
-      alert('Error al abrir Google Calendar');
+      console.error('Error creating calendar file', error);
+      alert('Error al crear el archivo del calendario');
     }
   };
 
@@ -193,7 +212,7 @@ export default function MyReservationsList({ refreshTrigger = 0, onReservationCa
                       <Edit size={13} className="mr-1 text-slate-400" /> Editar
                     </button>
                     <button
-                      onClick={() => handleAddToGoogleCalendar(res)}
+                      onClick={() => handleAddToCalendar(res)}
                       className="flex items-center justify-center text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 bg-white hover:bg-slate-50 cursor-pointer active:scale-95"
                     >
                       <CalendarPlus size={13} className="mr-1 text-slate-400" /> Calendar
